@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# TODO: add user-agent for NWS 
+
+# constants
+RED='\033[0;31m'
+GREEN='\033[1;32m'
+NC='\033[0;00m'
+
+
+set_weather_info () { 
+echo "Allow weatherapp to use location information? "
+read -p "[y/n] " userChoice
+	if [ "$userChoice" == "y" ]; then
+		clear
+		userLoc=$(curl ipinfo.io | grep '"loc": ' | sed 's/"//g' | sed 's/loc//g' | sed 's/.$//' | sed 's/: //' | sed -r 's/\s+//g')
+	else 
+		return[n]
+	fi
+	
+	curl https://api.weather.gov/points/$userLoc -o "weatherappinfo.txt"
+	userForecast=$(grep '"forecast": ' weatherappinfo.txt | sed 's/"//g' | sed 's/loc//g' | sed 's/.$//' | sed 's/: //' | sed -r 's/\s+//g')
+	echo $userCity
+}
+
+#returns string value of last saved coordinates
+get_user_loc () { 
+local retval=$(grep '"id": ' weatherappinfo.txt | sed 's/[^0-9,]//g' | sed -r 's/\s+//g' | sed 's/.$//')
+echo "$retval"
+}
+
+#returns string value of nws forecast api link, relevant to current user location
+get_forecast () {
+local retval=$(grep '"forecast": ' weatherappinfo.txt | sed 's/"//g' | sed 's/loc//g' | sed 's/.$//' | sed 's/: //' | sed -r 's/\s+//g' | sed 's/^........//')
+echo $retval
+}
+
+get_hourly_forecast () {
+local retval=$(grep '"forecastHourly": ' weatherappinfo.txt | sed 's/"//g' | sed 's/loc//g' | sed 's/.$//' | sed 's/: //' | sed -r 's/\s+//g' | sed 's/^..............//')
+echo $retval
+}
+
+get_weather_info () { 
+userLoc=$(grep '"id": ' weatherappinfo.txt | sed 's/[^0-9,]//g' | sed -r 's/\s+//g' | sed 's/.$//')
+
+curl https://api.weather.gov/points/$userLoc -o "weatherappinfo.txt"
+
+userForecast=$(grep '"forecast": ' weatherappinfo.txt | sed 's/"//g' | sed 's/loc//g' | sed 's/.$//' | sed 's/: //' | sed -r 's/\s+//g')
+}
+
+# curl navigator.geolocation.getCurrentPosition
+
+#TODO: rename file
+FILE=/home/ben/weatherappinfo.txt
+
+if [ -f "$FILE" ]; then 
+	echo "$FILE already exists, would you like to update existing weather info?"
+	read -p "[y/n] " userChoice
+	if [ "$userChoice" == "y" ]; then
+		set_weather_info
+		if [$(grep '"status": 404' weatherinfo.txt)]; then
+			echo "404... coordinates likely not supported."
+		else
+			echo "$FILE updated."
+		fi
+		clear
+	else
+		clear
+		echo "$FILE not changed, using stored location information."
+		
+	fi
+else 
+	"$FILE does not exist, fetching info from weather.gov"
+	set_weather_info 
+fi
+
+userForecast=$(get_forecast)
+userHourlyForecast=$(get_hourly_forecast)
+userLoc=$(get_user_loc)
+
+#TODO: rename file
+FILE2=/home/ben/weatherappinfoforecast.txt
+curl $userForecast -o weatherappinfoforecast.txt
+
+#TODO: rename file
+FILE3=/home/ben/weatherappinfohourlyforecast.txt
+curl $userHourlyForecast -o weatherappinfohourlyforecast.txt
+
+printf '\n\n'
+
+#TODO: add datefunction to weatherapp to avoid permission executable issues
+./datefunction
+
+echo "your location is: " 
+echo "your hourly forecast link is: $userHourlyForecast"
+echo "Fetched weather for $nwsOffice at points: $userLoc "
+temp=$(grep -o -m1 '"temperature": ..' weatherinfo.txt)
+echo "The current temperature is $temp F" | sed 's/"//g'
+printf '\n\n'
+echo -e "${GREEN}exit 0${NC}\n\n\n"
+exit 0
+
