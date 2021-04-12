@@ -8,9 +8,115 @@ NC='\033[0;00m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 
-main_menu() {
-echo "weatherapp main menu"
+check_user () {
+USER=/home/ben/weatherappprefs.txt
+local retval=0
+if [ -f $USER ]; then 
+	$retval=1
+	echo $retval
+else
+	echo $retval
+fi	
+}
 
+initial_setup () {
+USERPREFS=/home/ben/weatherappprefs.txt
+#if [ -f "$USERPREFS" ]; then
+#	echo "OVERWRITE existing preferences?"
+#	printf '\n'
+#	read -p "[y/n] " userChoice
+#	if [ "$userChoice" == "y" ]; then
+	
+	
+echo "Welcome to the weatherapp initial user setup."
+printf '\n\n\n\n\n\n'
+read -p "press enter to continue..."
+clear
+
+echo "weatherapp uses latitudinal and longitudinal geographic coordinates to access accurate weather information, provided by the NWS."
+printf '\n\n\n\n\n\n'
+read -p "step [1/3] press enter to continue..."
+clear
+
+
+}
+
+main_menu() {
+echo "weatherapp MAIN-MENU"
+printf '\n\n'
+echo "1. User configuration file"
+echo "2. Color and display"
+echo "3. Allow quick view"
+echo "4. return to forecast view"
+
+read -p "enter the corresponding number to select from the given options..." mainMenuOption
+case $mainMenuOption in
+[1]*)
+	clear
+	echo "User configuration file options"
+	printf '\n\n\n'
+	if [ -f weatherappprefs.txt ]; then
+		echo "Would you like to remove current user-configuration file?"
+		printf '\n\n\n\n'
+		read -p "[y/n] " userConfigChoice
+		if [ "$userConfigChoice" == "y" ]; then 
+			rm -i weatherappprefs.txt
+		else
+			echo "user confifuration file was not removed"
+		fi
+	else 
+		echo "User configuration file not found, running initial setup..."	
+		
+
+FILE=/home/ben/weatherappinfo.txt
+lastUpdated=$(get_time_stamp)
+printf '\n\n\n\n'
+if [ -f "$FILE" ]; then 
+	echo "$FILE last fetched at $lastUpdated"
+	printf '\n\n\n\n\n\n\n\n\n'
+	echo "Update existing weather info?"
+	printf '\n'
+	read -p "[y/n] " userChoice
+	if [ "$userChoice" == "y" ]; then
+		set_weather_info
+		if [$(grep '"status": 404' weatherinfo.txt)]; then
+			echo "404... coordinates likely not supported."
+		else
+			echo "$FILE updated."
+		fi
+		clear
+	else
+		clear
+		echo "$FILE not changed, using stored location information."
+		
+	fi
+else 
+	"$FILE does not exist, fetching info from weather.gov"
+	set_weather_info 
+fi
+}
+
+display_forecast () {
+clear
+
+nwsOffice=$(grep -m1 '"cwa": ..' weatherappinfo.txt | sed 's/^...............//')
+echo "Fetched weather at $timeStamp"
+echo "from NWS office $nwsOffice at points: $userLoc " | sed 's/"//g'
+printf '\n\n'
+
+userCity=$(grep -m2 '"city": ..' weatherappinfo.txt | sed 's/"//g' | sed 's/^....................//' | sed 's/.$//' | sed 's/: //' | sed 's/addressLocality//g')
+echo "your NWS office location is: $userCity" 
+printf '\n\n'
+
+echo "your hourly forecast link is: " 
+echo -e "${BLUE}$userHourlyForecast${NC}"
+printf '\n\n'
+
+temp=$(grep -o -m1 '"temperature": ..' weatherappinfohourlyforecast.txt) 
+degreesInF="° F"
+degreesInC="° C"
+
+echo "Current $temp$degreesInF" | sed 's/"//g'
 }
 
 time_of_day_gfx () {
@@ -87,35 +193,13 @@ userForecast=$(grep '"forecast": ' weatherappinfo.txt | sed 's/"//g' | sed 's/lo
 
 clear
 time_of_day_gfx
-echo "Welcome to weatherapp"
 
-#TODO: rename file
-FILE=/home/ben/weatherappinfo.txt
-lastUpdated=$(get_time_stamp)
-printf '\n\n\n\n'
-if [ -f "$FILE" ]; then 
-	echo "$FILE last fetched at $lastUpdated"
-	printf '\n\n\n\n\n\n\n\n\n'
-	echo "Update existing weather info?"
-	printf '\n'
-	read -p "[y/n] " userChoice
-	if [ "$userChoice" == "y" ]; then
-		set_weather_info
-		if [$(grep '"status": 404' weatherinfo.txt)]; then
-			echo "404... coordinates likely not supported."
-		else
-			echo "$FILE updated."
-		fi
-		clear
-	else
-		clear
-		echo "$FILE not changed, using stored location information."
-		
-	fi
-else 
-	"$FILE does not exist, fetching info from weather.gov"
-	set_weather_info 
-fi
+userAuth=$(check_user)
+
+if [ $userAuth > 0 ]; then
+	echo "Welcome back to weatherapp!"
+	printf '\n\n\n\n'
+
 
 userForecast=$(get_forecast)
 userHourlyForecast=$(get_hourly_forecast)
@@ -130,28 +214,7 @@ curl $userForecast -o weatherappinfoforecast.txt
 FILE3=/home/ben/weatherappinfohourlyforecast.txt
 curl $userHourlyForecast -o weatherappinfohourlyforecast.txt
 
-clear
 
-#TODO: add datefunction to weatherapp to avoid permission executable issues
-
-nwsOffice=$(grep -m1 '"cwa": ..' weatherappinfo.txt | sed 's/^...............//')
-echo "Fetched weather at $timeStamp"
-echo "from NWS office $nwsOffice at points: $userLoc " | sed 's/"//g'
-printf '\n\n'
-
-userCity=$(grep -m2 '"city": ..' weatherappinfo.txt | sed 's/"//g' | sed 's/^....................//' | sed 's/.$//' | sed 's/: //' | sed 's/addressLocality//g')
-echo "your NWS office location is: $userCity" 
-printf '\n\n'
-
-echo "your hourly forecast link is: " 
-echo -e "${BLUE}$userHourlyForecast${NC}"
-printf '\n\n'
-
-temp=$(grep -o -m1 '"temperature": ..' weatherappinfohourlyforecast.txt) 
-degreesInF="° F"
-degreesInC="° C"
-
-echo "Current $temp$degreesInF" | sed 's/"//g'
 printf '\n\n'
 echo -e "${GREEN}exit 0${NC}\n\n\n"
 
