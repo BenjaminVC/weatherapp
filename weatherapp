@@ -46,12 +46,12 @@ echo "weatherapp MAIN-MENU"
 printf '\n\n'
 echo "1. User configuration file"
 echo "2. Color and display"
-echo "3. Allow quick view"
+echo "3. Quick view"
 echo "4. return to forecast view"
 
 read -p "enter the corresponding number to select from the given options..." mainMenuOption
 case $mainMenuOption in
-[1]*)
+1)
 	clear
 	echo "User configuration file options"
 	printf '\n\n\n'
@@ -65,9 +65,30 @@ case $mainMenuOption in
 			echo "user confifuration file was not removed"
 		fi
 	else 
-		echo "User configuration file not found, running initial setup..."	
-		
-
+		echo "User configuration file not found, running initial setup..."
+		initial_setup
+	fi
+	;;
+2)
+	clear
+	echo "Color and display options"
+	;;
+3)
+	clear
+	echo "Quick view options"
+	;;
+4)
+	clear
+	display_forecast
+	;;
+*)
+	clear
+	main_menu
+esac
+}
+	
+	
+check_status () {		
 FILE=/home/ben/weatherappinfo.txt
 lastUpdated=$(get_time_stamp)
 printf '\n\n\n\n'
@@ -97,7 +118,10 @@ fi
 }
 
 display_forecast () {
-clear
+userForecast=$(get_forecast)
+userHourlyForecast=$(get_hourly_forecast)
+userLoc=$(get_user_loc)
+timeStamp=$(get_time_stamp)
 
 nwsOffice=$(grep -m1 '"cwa": ..' weatherappinfo.txt | sed 's/^...............//')
 echo "Fetched weather at $timeStamp"
@@ -189,33 +213,42 @@ curl https://api.weather.gov/points/$userLoc -o "weatherappinfo.txt"
 userForecast=$(grep '"forecast": ' weatherappinfo.txt | sed 's/"//g' | sed 's/loc//g' | sed 's/.$//' | sed 's/: //' | sed -r 's/\s+//g')
 }
 
+#######################################################################################
 #while sleep 1;do tput sc;tput cup 0 $(($(tput cols)-11));echo -e "\e[31m`date +%r`\e[39m";tput rc;done &
+#######################################################################################
 
 clear
-time_of_day_gfx
+
 
 userAuth=$(check_user)
-
-if [ $userAuth > 0 ]; then
+if [ $userAuth ]; then
+	time_of_day_gfx
 	echo "Welcome back to weatherapp!"
+	printf '\n\n'
+	display_forecast
+else
+	echo "Welcome to weatherapp, let's get started."
 	printf '\n\n\n\n'
+	read -p "press enter to continue..."
+	clear
+	initial_setup
+fi
+	
 
 
-userForecast=$(get_forecast)
-userHourlyForecast=$(get_hourly_forecast)
-userLoc=$(get_user_loc)
-timeStamp=$(get_time_stamp)
+
 
 #TODO: rename file
 FILE2=/home/ben/weatherappinfoforecast.txt
-curl $userForecast -o weatherappinfoforecast.txt
+curl -s $userForecast -o weatherappinfoforecast.txt
 
 #TODO: rename file
 FILE3=/home/ben/weatherappinfohourlyforecast.txt
-curl $userHourlyForecast -o weatherappinfohourlyforecast.txt
+curl -s $userHourlyForecast -o weatherappinfohourlyforecast.txt
 
 
-printf '\n\n'
+printf '\n'
+read -p "press enter to exit"
 echo -e "${GREEN}exit 0${NC}\n\n\n"
 
 
