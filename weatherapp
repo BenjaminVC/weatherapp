@@ -118,6 +118,7 @@ fi
 }
 
 display_forecast () {
+time_of_day_gfx
 userForecast=$(get_forecast)
 userHourlyForecast=$(get_hourly_forecast)
 userLoc=$(get_user_loc)
@@ -141,15 +142,29 @@ degreesInF="° F"
 degreesInC="° C"
 
 echo "Current $temp$degreesInF" | sed 's/"//g'
+
+printf '\n'
+read -p "press enter to exit or type m to go to main-menu: " userChoice
+if [ "$userChoice" == "m" ]; then 
+	main_menu
+fi
 }
 
 time_of_day_gfx () {
+#isDayTime from weatherappinfo for function control
+isDayTime=$(grep -m1 '"isDaytime": ..' weatherappinfoforecast.txt | sed 's/"//g' | sed 's/^...........................//' | sed 's/.$//')
+if [ $isDayTime ]; then
 echo -e "${YELLOW} 		                                                      .     ."
 echo -e "   		                                                       .###."
 echo -e "		                                                   - - #  # - -"
 echo -e "  	                                                              .###."
 echo -e "  		                                                     .     ."
 echo -e "${NC}"
+
+else
+echo "it is night-time"
+
+fi
 }
 
 get_date() {
@@ -247,8 +262,7 @@ FILE3=/home/ben/weatherappinfohourlyforecast.txt
 curl -s $userHourlyForecast -o weatherappinfohourlyforecast.txt
 
 
-printf '\n'
-read -p "press enter to exit"
+
 echo -e "${GREEN}exit 0${NC}\n\n\n"
 
 
