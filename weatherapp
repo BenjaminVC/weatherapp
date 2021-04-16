@@ -12,7 +12,7 @@ check_user () {
 USER=/home/ben/weatherappprefs.txt
 local retval=0
 if [ -f $USER ]; then 
-	$retval=1
+	retval=1
 	echo $retval
 else
 	echo $retval
@@ -21,35 +21,118 @@ fi
 
 initial_setup () {
 USERPREFS=/home/ben/weatherappprefs.txt
-#if [ -f "$USERPREFS" ]; then
-#	echo "OVERWRITE existing preferences?"
-#	printf '\n'
-#	read -p "[y/n] " userChoice
-#	if [ "$userChoice" == "y" ]; then
-	
-	
-echo "Welcome to the weatherapp initial user setup."
-printf '\n\n\n\n\n\n'
-read -p "press enter to continue..."
-clear
-
-echo "weatherapp uses latitudinal and longitudinal geographic coordinates to access accurate weather information, provided by the NWS."
-printf '\n\n\n\n\n\n'
-read -p "step [1/3] press enter to continue..."
-clear
-
-
+if [ -f "$USERPREFS" ]; then
+	echo "OVERWRITE existing preferences?"
+	printf '\n'
+	read -p "[y/n] " userChoice
+	if [ "$userChoice" == "y" ]; then
+		rm -i -v weatherappprefs.txt
+		initial_setup
+	else
+		echo "user preferences not changes"
+	fi
+else
+	echo "Welcome to the weatherapp initial user setup."
+	printf '\n\n\n\n\n\n'
+	read -p "press enter to continue..."
+	clear
+	echo "weatherapp uses latitudinal and longitudinal geographic coordinates to 	access accurate weather information, provided by the NWS."
+	printf '\n\n\n\n\n\n'
+	echo "enter 'y' to allow the use of location information" 
+	read -p "[y/n] " allowLocation
+	printf '\n\n\n'
+	echo "step [1/4] "
+	if [ "allowLocation" == "y" ]; then
+		echo "Location permissions ${GREEN}accepted${NC}"		
+		$allowLocation="locPermission = 1" | echo "$allowLocation" > 		$USERPREFS
+		echo "step [1/4] "
+		printf '\n\n\n'
+		read -p "press enter to continue..."
+		clear
+	else
+		$allowLocation="locPermission = 0" | echo "$allowLocation" > 		$USERPREFS
+		# force weatherapp to ask for longitude and latitude in this case
+		echo "Location permissions ${RED}denied${NC}"
+		echo "step [1/4] "
+		printf '\n\n\n'
+		read -p "press enter to continue..."
+		clear
+	fi
+	echo "Enable weatherapp to change terminal colors and themes based on time 		of day?" 
+	read -p "[y/n] " allowTheme
+	if [ "$allowTheme" == "y" ]; then
+		$allowTheme="themePermissions = 1" | echo "$allowTheme" > $USERPREFS
+		echo "Colors and themes ${GREEN}enabled${NC}" 
+		echo "step [2/4] "
+		printf '\n\n\n'
+		read -p "press enter to continue..."
+		clear
+	else
+		$allowTheme="themePermissions = 0" | echo "$allowTheme" > $USERPREFS
+		echo "Colors and themes ${RED}disabled${NC}"
+		echo "step [2/4] "
+		printf '\n\n\n'
+		read -p "press enter to continue..."
+		clear
+	fi
+	echo "Enable quickrun so that when weatherapp starts, it will immediately 		display the current forecast?" 
+	read -p "[y/n] " allowQuickrun
+	if [ "$allowQuickrun" == "y" ]; then 
+		$allowQuickrun="quickrunPermissions = 1" | echo "$allowQuickrun" > 			$USERPREFS
+		echo "quickrun ${GREEN}enabled${NC}" 
+		echo "step [3/4] "
+		printf '\n\n\n'
+		read -p "press enter to continue..."
+		clear
+	else
+		$allowQuickrun="quickrunPermissions = 0" | echo "$allowQuickrun" > 			$USERPREFS
+		echo "quickrun ${RED}disabled${NC}"
+		echo "step [3/4] "
+		printf '\n\n\n'
+		read -p "press enter to continue..."
+		clear
+	fi
+	userDegrees="Farenheit"
+	echo "The default unit of measurement for temperature is set to 			$userDegrees, do you want to save these changes?"
+	printf '\n\n'
+	echo "Enter 'y' to save changes or 'n' to switch to Celcius"
+	read -p "[y/n] " allowFarenheit
+	if [ "$allowFarenheit" == "y" ]; then
+		$allowFarenheit="farenheit = 1" | echo "$allowFarenheit" > $USERPREFS
+		echo "Farenheit ${GREEN}enabled${NC}" 
+		echo "step [4/4] "
+		printf '\n\n\n'
+		read -p "press enter to continue..."
+		clear
+	else
+		$allowFarenheit="farenheit = 0" | echo "$allowFarenheit" > $USERPREFS
+		echo "Farenheit ${RED}disabled${NC}" 
+		echo "step [4/4] "
+		printf '\n\n\n'
+		read -p "press enter to continue..."
+		clear
+	echo "Initial setup complete!"
+	printf '\n\n\n\n'
+	read -p "press enter to return to the MAIN-MENU"
+	fi
+fi
+main_menu
 }
 
+#TODO: grep USERPREFS file to view and change initialized settings in terminal window 
 main_menu() {
-echo "weatherapp MAIN-MENU"
+clear
+echo "                             weatherapp MAIN-MENU"
 printf '\n\n'
+echo "Enter the corresponding number to select from the given options: "
+printf '\n'
 echo "1. User configuration file"
 echo "2. Color and display"
 echo "3. Quick view"
-echo "4. return to forecast view"
+echo "4. Update weather"
+echo "5. return to forecast view"
 
-read -p "enter the corresponding number to select from the given options..." mainMenuOption
+read mainMenuOption
 case $mainMenuOption in
 1)
 	clear
@@ -78,6 +161,10 @@ case $mainMenuOption in
 	echo "Quick view options"
 	;;
 4)
+	clear
+	check_status
+	;;
+5)
 	clear
 	display_forecast
 	;;
@@ -115,10 +202,11 @@ else
 	"$FILE does not exist, fetching info from weather.gov"
 	set_weather_info 
 fi
+display_forecast
 }
 
 display_forecast () {
-time_of_day_gfx
+#time_of_day_gfx
 userForecast=$(get_forecast)
 userHourlyForecast=$(get_hourly_forecast)
 userLoc=$(get_user_loc)
@@ -151,19 +239,23 @@ fi
 }
 
 time_of_day_gfx () {
-#isDayTime from weatherappinfo for function control
-isDayTime=$(grep -m1 '"isDaytime": ..' weatherappinfoforecast.txt | sed 's/"//g' | sed 's/^...........................//' | sed 's/.$//')
-if [ $isDayTime ]; then
+local isDayTime=$(grep -m1 '"isDaytime": ..' weatherappinfoforecast.txt | sed 's/"//g' | sed 's/^...........................//' | sed 's/.$//')
+hourNow=$(get_date | sed 's/^................//' |cut -c1-2)
+meridianPosition=$(get_date | sed 's/^.........................//' |cut -c1-2)
+if [ "$meridianPosition" == "AM" ] && [ "$hourNow" < "18" ]; then
 echo -e "${YELLOW} 		                                                      .     ."
 echo -e "   		                                                       .###."
 echo -e "		                                                   - - #  # - -"
 echo -e "  	                                                              .###."
 echo -e "  		                                                     .     ."
 echo -e "${NC}"
-
 else
-echo "it is night-time"
-
+isDayTime="false"
+echo -e "                                      			                \\\`"
+echo -e "                                                                          |"
+echo -e "                                                                        /,"
+echo -e "                                                                         "
+echo -e "                                                                         "
 fi
 }
 
@@ -236,11 +328,17 @@ clear
 
 
 userAuth=$(check_user)
+timeOfDay=$(time_of_day_gfx)
 if [ $userAuth ]; then
 	time_of_day_gfx
-	echo "Welcome back to weatherapp!"
-	printf '\n\n'
-	display_forecast
+	if [ "$timeOfDay" == true ]; then
+		echo "Welcome back to weatherapp!"
+		printf '\n\n'
+	else
+		echo "Keeping it quiet..."
+		printf '\n\n'
+	fi
+display_forecast
 else
 	echo "Welcome to weatherapp, let's get started."
 	printf '\n\n\n\n'
