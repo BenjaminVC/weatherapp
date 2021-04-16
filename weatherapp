@@ -242,7 +242,8 @@ time_of_day_gfx () {
 local isDayTime=$(grep -m1 '"isDaytime": ..' weatherappinfoforecast.txt | sed 's/"//g' | sed 's/^...........................//' | sed 's/.$//')
 hourNow=$(get_date | sed 's/^................//' |cut -c1-2)
 meridianPosition=$(get_date | sed 's/^.........................//' |cut -c1-2)
-if [ "$meridianPosition" == "AM" ] && [ "$hourNow" < "18" ]; then
+if [ "$meridianPosition" == "AM" ] && [ $hourNow -gt 6 ]; then
+isDayTime="true"
 echo -e "${YELLOW} 		                                                      .     ."
 echo -e "   		                                                       .###."
 echo -e "		                                                   - - #  # - -"
@@ -250,6 +251,7 @@ echo -e "  	                                                              .###."
 echo -e "  		                                                     .     ."
 echo -e "${NC}"
 else
+printf '\n'
 isDayTime="false"
 echo -e "                                      			                \\\`"
 echo -e "                                                                          |"
