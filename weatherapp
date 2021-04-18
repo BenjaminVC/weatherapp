@@ -122,7 +122,7 @@ main_menu
 #TODO: grep USERPREFS file to view and change initialized settings in terminal window 
 main_menu() {
 clear
-echo "                             weatherapp MAIN-MENU"
+echo -e "			${BLUE}weatherapp MAIN-MENU${NC}"
 printf '\n\n'
 echo "Enter the corresponding number to select from the given options: "
 printf '\n'
@@ -130,7 +130,7 @@ echo "1. User configuration file"
 echo "2. Color and display"
 echo "3. Quick view"
 echo "4. Update weather"
-echo "5. return to forecast view"
+echo -e "5. ${BLUE}return to forecast view${NC}"
 
 read mainMenuOption
 case $mainMenuOption in
@@ -145,7 +145,9 @@ case $mainMenuOption in
 		if [ "$userConfigChoice" == "y" ]; then 
 			rm -i weatherappprefs.txt
 		else
-			echo "user confifuration file was not removed"
+			printf '\n\n\n\n\n'
+			read -p "user confifuration file was not removed, press enter to return to MAIN-MENU"
+			main_menu
 		fi
 	else 
 		echo "User configuration file not found, running initial setup..."
@@ -206,7 +208,7 @@ display_forecast
 }
 
 display_forecast () {
-#time_of_day_gfx
+time_of_day_gfx
 userForecast=$(get_forecast)
 userHourlyForecast=$(get_hourly_forecast)
 userLoc=$(get_user_loc)
@@ -218,7 +220,7 @@ echo "from NWS office $nwsOffice at points: $userLoc " | sed 's/"//g'
 printf '\n\n'
 
 userCity=$(grep -m2 '"city": ..' weatherappinfo.txt | sed 's/"//g' | sed 's/^....................//' | sed 's/.$//' | sed 's/: //' | sed 's/addressLocality//g')
-echo "your NWS office location is: $userCity" 
+echo -e "your NWS office location is: ${BLUE}$userCity${NC}" 
 printf '\n\n'
 
 echo "your hourly forecast link is: " 
@@ -239,26 +241,43 @@ fi
 }
 
 time_of_day_gfx () {
-local isDayTime=$(grep -m1 '"isDaytime": ..' weatherappinfoforecast.txt | sed 's/"//g' | sed 's/^...........................//' | sed 's/.$//')
+clear
+#local isDayTime=$(grep -m1 '"isDaytime": ..' weatherappinfoforecast.txt | sed 's/"//g' | sed 's/^...........................//' | sed 's/.$//')
 hourNow=$(get_date | sed 's/^................//' |cut -c1-2)
 meridianPosition=$(get_date | sed 's/^.........................//' |cut -c1-2)
 if [ "$meridianPosition" == "AM" ] && [ $hourNow -gt 6 ]; then
-isDayTime="true"
+local isDayTime="true"
 echo -e "${YELLOW} 		                                                      .     ."
 echo -e "   		                                                       .###."
 echo -e "		                                                   - - #  # - -"
 echo -e "  	                                                              .###."
 echo -e "  		                                                     .     ."
 echo -e "${NC}"
-else
+elif [ "$meridianPosition" == "AM" ] && [ $hourNow -lt 6 ]; then 
 printf '\n'
-isDayTime="false"
+local isDayTime="false"
 echo -e "                                      			                \\\`"
 echo -e "                                                                          |"
 echo -e "                                                                        /,"
 echo -e "                                                                         "
+echo -e "  									     "	
+elif [ "$meridianPosition" == "PM" ] && [ $hourNow -gt 8 ]; then
+printf '\n'
+local isDayTime="false"
+echo -e "                                      			                \\\`"
+echo -e "                                                                          |"
+echo -e "                                                                        /,"
 echo -e "                                                                         "
+echo -e "  									     "	
+else
+echo -e "${YELLOW} 		                                                      .     ."
+echo -e "   		                                                       .###."
+echo -e "		                                                   - - #  # - -"
+echo -e "  	                                                              .###."
+echo -e "  		                                                     .     ."
+echo -e "${NC}"
 fi
+
 }
 
 get_date() {
@@ -329,18 +348,19 @@ userForecast=$(grep '"forecast": ' weatherappinfo.txt | sed 's/"//g' | sed 's/lo
 clear
 
 
+
 userAuth=$(check_user)
-timeOfDay=$(time_of_day_gfx)
+
 if [ $userAuth ]; then
-	time_of_day_gfx
-	if [ "$timeOfDay" == true ]; then
+timeOfDay=$(time_of_day_gfx)
+if [ "$timeOfDay" == "true" ]; then
 		echo "Welcome back to weatherapp!"
 		printf '\n\n'
 	else
 		echo "Keeping it quiet..."
 		printf '\n\n'
 	fi
-display_forecast
+	display_forecast
 else
 	echo "Welcome to weatherapp, let's get started."
 	printf '\n\n\n\n'
