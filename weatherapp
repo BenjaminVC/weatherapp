@@ -42,35 +42,38 @@ else
 	read -p "[y/n] " allowLocation
 	printf '\n\n\n'
 	echo "step [1/4] "
-	if [ "allowLocation" == "y" ]; then
-		echo "Location permissions ${GREEN}accepted${NC}"		
-		$allowLocation="locPermission = 1" | echo "$allowLocation" > 		$USERPREFS
-		echo "step [1/4] "
+	if [ "$allowLocation" == "y" ]; then
+		echo -e "Location permissions ${GREEN}accepted${NC}"		
+		allowLocation="locPermission = 1" | echo "$allowLocation" > 		$USERPREFS
 		printf '\n\n\n'
 		read -p "press enter to continue..."
 		clear
 	else
-		$allowLocation="locPermission = 0" | echo "$allowLocation" > 		$USERPREFS
+		allowLocation="locPermission = 0" | echo "$allowLocation" > 		$USERPREFS
 		# force weatherapp to ask for longitude and latitude in this case
-		echo "Location permissions ${RED}denied${NC}"
-		echo "step [1/4] "
+		echo -e "Location permissions ${RED}denied${NC}"
 		printf '\n\n\n'
 		read -p "press enter to continue..."
 		clear
 	fi
+	echo "step [2/4] "
+	printf '\n\n'
 	echo "Enable weatherapp to change terminal colors and themes based on time 		of day?" 
 	read -p "[y/n] " allowTheme
 	if [ "$allowTheme" == "y" ]; then
-		$allowTheme="themePermissions = 1" | echo "$allowTheme" > $USERPREFS
-		echo "Colors and themes ${GREEN}enabled${NC}" 
-		echo "step [2/4] "
-		printf '\n\n\n'
+		allowTheme="themePermissions = 1" | echo "$allowTheme" > $USERPREFS
+		echo -e "Colors and themes ${GREEN}enabled${NC}" 
+		printf '\n\n'
+		
+		
 		read -p "press enter to continue..."
+		printf '\n\n\n'
+		
 		clear
 	else
-		$allowTheme="themePermissions = 0" | echo "$allowTheme" > $USERPREFS
-		echo "Colors and themes ${RED}disabled${NC}"
-		echo "step [2/4] "
+		allowTheme="themePermissions = 0" | echo "$allowTheme" > $USERPREFS
+		echo -e "Colors and themes ${RED}disabled${NC}"
+		
 		printf '\n\n\n'
 		read -p "press enter to continue..."
 		clear
@@ -78,15 +81,15 @@ else
 	echo "Enable quickrun so that when weatherapp starts, it will immediately 		display the current forecast?" 
 	read -p "[y/n] " allowQuickrun
 	if [ "$allowQuickrun" == "y" ]; then 
-		$allowQuickrun="quickrunPermissions = 1" | echo "$allowQuickrun" > 			$USERPREFS
-		echo "quickrun ${GREEN}enabled${NC}" 
+		allowQuickrun="quickrunPermissions = 1" | echo "$allowQuickrun" > 			$USERPREFS
+		echo -e "quickrun ${GREEN}enabled${NC}" 
 		echo "step [3/4] "
 		printf '\n\n\n'
 		read -p "press enter to continue..."
 		clear
 	else
-		$allowQuickrun="quickrunPermissions = 0" | echo "$allowQuickrun" > 			$USERPREFS
-		echo "quickrun ${RED}disabled${NC}"
+		allowQuickrun="quickrunPermissions = 0" | echo "$allowQuickrun" > 			$USERPREFS
+		echo -e "quickrun ${RED}disabled${NC}"
 		echo "step [3/4] "
 		printf '\n\n\n'
 		read -p "press enter to continue..."
@@ -98,15 +101,15 @@ else
 	echo "Enter 'y' to save changes or 'n' to switch to Celcius"
 	read -p "[y/n] " allowFarenheit
 	if [ "$allowFarenheit" == "y" ]; then
-		$allowFarenheit="farenheit = 1" | echo "$allowFarenheit" > $USERPREFS
-		echo "Farenheit ${GREEN}enabled${NC}" 
+		allowFarenheit="farenheit = 1" | echo "$allowFarenheit" > $USERPREFS
+		echo -e "Farenheit ${GREEN}enabled${NC}" 
 		echo "step [4/4] "
 		printf '\n\n\n'
 		read -p "press enter to continue..."
 		clear
 	else
-		$allowFarenheit="farenheit = 0" | echo "$allowFarenheit" > $USERPREFS
-		echo "Farenheit ${RED}disabled${NC}" 
+		allowFarenheit="farenheit = 0" | echo "$allowFarenheit" > $USERPREFS
+		echo -e "Farenheit ${RED}disabled${NC}" 
 		echo "step [4/4] "
 		printf '\n\n\n'
 		read -p "press enter to continue..."
@@ -122,7 +125,7 @@ main_menu
 #TODO: grep USERPREFS file to view and change initialized settings in terminal window 
 main_menu() {
 clear
-echo -e "			${BLUE}weatherapp MAIN-MENU${NC}"
+echo -e "			${BLUE}       weatherapp MAIN-MENU${NC}"
 printf '\n\n'
 echo "Enter the corresponding number to select from the given options: "
 printf '\n'
@@ -137,20 +140,27 @@ case $mainMenuOption in
 1)
 	clear
 	echo "User configuration file options"
-	printf '\n\n\n'
+	printf '\n\n'
 	if [ -f weatherappprefs.txt ]; then
 		echo "Would you like to remove current user-configuration file?"
 		printf '\n\n\n\n'
 		read -p "[y/n] " userConfigChoice
 		if [ "$userConfigChoice" == "y" ]; then 
+			printf '\n\n'
+			echo "Enter 'y' again to confirm"
+			printf '\n\n\n'
 			rm -i weatherappprefs.txt
+			clear
+			initial_setup
 		else
 			printf '\n\n\n\n\n'
 			read -p "user confifuration file was not removed, press enter to return to MAIN-MENU"
 			main_menu
 		fi
 	else 
+		
 		echo "User configuration file not found, running initial setup..."
+		printf '\n\n'
 		initial_setup
 	fi
 	;;
@@ -160,7 +170,19 @@ case $mainMenuOption in
 	;;
 3)
 	clear
-	echo "Quick view options"
+	echo -e "			${BLUE}       Quick-View options${NC}"
+	printf '\n'
+	echo "Quick view allows weatherapp to immediately update and display the forecast. "
+	printf '\n\n\n'
+	echo "Enable quick-view?"
+	read -p "[y/n]" quickViewEnable
+		if [ "$quickViewEnable" == "y" ]; then
+			printf '\n\n'
+			echo -e "Quick-View ${GREEN}enabled${NC}"
+			printf '\n\n\n\n\n\n\n\n\n\n\n\n'
+			read -p "press enter to return to main-menu"
+			main_menu
+		fi
 	;;
 4)
 	clear
@@ -207,33 +229,105 @@ fi
 display_forecast
 }
 
+get_forecast_number () {
+i=1
+j=$i
+tempNotFound=1
+foreCastNumber=0
+dateNotFound=1
+timeSpanNotFound=1
+
+currentDate=$(date +"%Y-%m-%d")
+currentTime=$(date +"%H:%M")
+hourlyForeCastTime="$currentDate"T"$currentTime"
+
+hourlyForeCastDate=$(grep -m${i} ${currentDate} weatherappinfohourlyforecast.txt | sed 's/"//g' | sed 's/.$//' | sed 's/^.................//' | tail -n1)
+
+
+hourlyForeCastStartTimeHour=$(grep -m${i} '"startTime": ' weatherappinfohourlyforecast.txt | sed 's/"//g' | sed 's/.$//' | sed 's/^......................................//' | cut -c1-2 | tail -n1)
+hourlyForeCastEndTimeHour=$(grep -m${i} '"endTime": ' weatherappinfohourlyforecast.txt | sed 's/"//g' | sed 's/.$//' | sed 's/^....................................//' | cut -c1-2 | tail -n1)
+hourlyForeCastTimeHour=$(echo $hourlyForeCastTime | sed 's/^...........//' | cut -c1-2)
+hourlyForeCastTimeMinutes=$(echo $hourlyForeCastTime | sed 's/^..............//' | cut -c1-2)
+
+
+
+foundDate=$(echo $hourlyForeCastDate | cut -c1-10)
+
+currentDate=$(echo $currentDate | cut -c1-10)
+
+while [ $tempNotFound -eq 1 ]
+do
+	while [ $dateNotFound -eq 1 ] 
+	do
+		hourlyForeCastDate=$(grep -m${i} ${currentDate} weatherappinfohourlyforecast.txt | sed 's/"//g' | sed 's/.$//' | sed 's/^.................//' | tail -n1)
+		foundDate=$(echo $hourlyForeCastDate | cut -c1-10)
+	currentDate=$(echo $currentDate | cut -c1-10)
+		if [ "$currentDate" == "$foundDate" ]; then
+		dateNotFound=0
+		else
+		((i++))
+		fi
+	done
+	
+hourlyForeCastStartTimeHour=$(grep -m${j} '"startTime": ' weatherappinfohourlyforecast.txt | sed 's/"//g' | sed 's/.$//' | sed 's/^......................................//' | cut -c1-2 | tail -n1)
+hourlyForeCastEndTimeHour=$(grep -m${j} '"endTime": ' weatherappinfohourlyforecast.txt | sed 's/"//g' | sed 's/.$//' | sed 's/^....................................//' | cut -c1-2 | tail -n1)
+	
+	if [ $hourlyForeCastStartTimeHour -le $hourlyForeCastTimeHour ] && [ $hourlyForeCastTimeHour -le $hourlyForeCastEndTimeHour ]; then
+			foreCastNumber=$j
+			tempNotFound=0
+	else
+			((j++))
+	fi
+	
+done
+echo $j
+}
+
+get_temp () {
+number=$(get_forecast_number)
+local temp=$(grep -m${number} '"temperature": ..' weatherappinfohourlyforecast.txt | sed 's/^...............................//' | cut -c1-2 | tail -n1)
+echo $temp
+}
+
 display_forecast () {
 time_of_day_gfx
+echo "$hourlyForeCastTime"
 userForecast=$(get_forecast)
 userHourlyForecast=$(get_hourly_forecast)
 userLoc=$(get_user_loc)
-timeStamp=$(get_time_stamp)
+timeStampTime=$(get_time_stamp | sed 's/^................//')
+timeStampDate=$(get_time_stamp | grep -oE "^.{1,12}\w*")
+ 
 
-nwsOffice=$(grep -m1 '"cwa": ..' weatherappinfo.txt | sed 's/^...............//')
-echo "Fetched weather at $timeStamp"
-echo "from NWS office $nwsOffice at points: $userLoc " | sed 's/"//g'
+nwsOffice=$(grep -m1 '"cwa": ..' weatherappinfo.txt | sed 's/^...............//' | sed 's/,//g')
+echo -e "Displaying forecast data for ${BLUE}$timeStampDate${NC} at ${BLUE}$timeStampTime${NC}"
 printf '\n\n'
+echo -e "NWS office ${BLUE}$nwsOffice${NC}, at points: ${BLUE}$userLoc${NC}" | sed 's/"//g'
+printf '\n'
 
 userCity=$(grep -m2 '"city": ..' weatherappinfo.txt | sed 's/"//g' | sed 's/^....................//' | sed 's/.$//' | sed 's/: //' | sed 's/addressLocality//g')
 echo -e "your NWS office location is: ${BLUE}$userCity${NC}" 
 printf '\n\n'
 
-echo "your hourly forecast link is: " 
-echo -e "${BLUE}$userHourlyForecast${NC}"
+#echo "your hourly forecast link is: " 
+#echo -e "${BLUE}$userHourlyForecast${NC}"
 printf '\n\n'
 
-temp=$(grep -o -m1 '"temperature": ..' weatherappinfohourlyforecast.txt) 
+temp=$(get_temp)
 degreesInF="° F"
 degreesInC="° C"
 
-echo "Current $temp$degreesInF" | sed 's/"//g'
 
-printf '\n'
+if [ $temp -gt 85 ]; then
+	echo -e "Current temperature: ${RED}$temp$degreesInF${NC}" | sed 's/"//g'
+elif [ $temp -gt 65 ] && [ $temp -lt 85 ]; then
+	echo -e "Current temperature: ${YELLOW}$temp$degreesInF${NC}" | sed 's/"//g'
+elif [ $temp -lt 65 ] && [ $temp -gt 55 ]; then
+	echo -e "Current temperature: ${GREEN}$temp$degreesInF${NC}" | sed 's/"//g'
+else
+	echo -e "Current temperature: ${BLUE}$temp$degreesInF${NC}" | sed 's/"//g'
+fi
+printf '\n\n\n\n'
 read -p "press enter to exit or type m to go to main-menu: " userChoice
 if [ "$userChoice" == "m" ]; then 
 	main_menu
@@ -245,7 +339,7 @@ clear
 #local isDayTime=$(grep -m1 '"isDaytime": ..' weatherappinfoforecast.txt | sed 's/"//g' | sed 's/^...........................//' | sed 's/.$//')
 hourNow=$(get_date | sed 's/^................//' |cut -c1-2)
 meridianPosition=$(get_date | sed 's/^.........................//' |cut -c1-2)
-if [ "$meridianPosition" == "AM" ] && [ $hourNow -gt 6 ]; then
+if [ "$meridianPosition" == "AM" ] && [ $hourNow -ge 6 ]; then
 local isDayTime="true"
 echo -e "${YELLOW} 		                                                      .     ."
 echo -e "   		                                                       .###."
@@ -253,22 +347,30 @@ echo -e "		                                                   - - #  # - -"
 echo -e "  	                                                              .###."
 echo -e "  		                                                     .     ."
 echo -e "${NC}"
-elif [ "$meridianPosition" == "AM" ] && [ $hourNow -lt 6 ]; then 
+elif [ "$meridianPosition" == "AM" ] && [ $hourNow -le 6 ]; then 
 printf '\n'
 local isDayTime="false"
 echo -e "                                      			                \\\`"
 echo -e "                                                                          |"
 echo -e "                                                                        /,"
 echo -e "                                                                         "
+echo -e "  									     "
+elif [ "$meridianPosition" == "PM" ] && [ $hourNow -ge 8 ]; then
+printf '\n'
+local isDayTime="false"
+echo -e "                                      			                \\\`"
+echo -e "                                                                         |"
+echo -e "                                                                        /,"
+echo -e "                                                                         "
 echo -e "  									     "	
-elif [ "$meridianPosition" == "PM" ] && [ $hourNow -gt 8 ]; then
+elif [ "$meridianPosition" == "AM" ] && [ $hourNow -ge 12 ]; then
 printf '\n'
 local isDayTime="false"
 echo -e "                                      			                \\\`"
 echo -e "                                                                          |"
 echo -e "                                                                        /,"
 echo -e "                                                                         "
-echo -e "  									     "	
+echo -e "  									     "
 else
 echo -e "${YELLOW} 		                                                      .     ."
 echo -e "   		                                                       .###."
@@ -277,7 +379,6 @@ echo -e "  	                                                              .###."
 echo -e "  		                                                     .     ."
 echo -e "${NC}"
 fi
-
 }
 
 get_date() {
@@ -307,12 +408,16 @@ read -p "[y/n] " userChoice
 		set_time_stamp
 		clear
 		userLoc=$(curl ipinfo.io | grep '"loc": ' | sed 's/"//g' | sed 's/loc//g' | sed 's/.$//' | sed 's/: //' | sed -r 's/\s+//g')
+		curl https://api.weather.gov/points/$userLoc -o weatherappinfo.txt
+		FILE2=/home/ben/weatherappinfoforecast.txt
+		curl -s $userForecast -o weatherappinfoforecast.txt
+		FILE3=/home/ben/weatherappinfohourlyforecast.txt
+		curl -s $userHourlyForecast -o weatherappinfohourlyforecast.txt
+		userForecast=$(grep '"forecast": ' weatherappinfo.txt | sed 's/"//g' | sed 's/loc//g' | sed 's/.$//' | sed 's/: //' | sed -r 's/\s+//g')
 	else 
 		return[n]
 	fi
 	
-	curl https://api.weather.gov/points/$userLoc -o "weatherappinfo.txt"
-	userForecast=$(grep '"forecast": ' weatherappinfo.txt | sed 's/"//g' | sed 's/loc//g' | sed 's/.$//' | sed 's/: //' | sed -r 's/\s+//g')
 	echo $userCity
 }
 
@@ -349,17 +454,20 @@ clear
 
 
 
+# Checks if a user configuration file has been created, if true weatherapp displays forecast, if not the user enters initial weatherapp setup
 userAuth=$(check_user)
-
+tempCheck=$(get_temp)
 if [ $userAuth ]; then
+# Controls day-time and night-time greeting and graphics
 timeOfDay=$(time_of_day_gfx)
-if [ "$timeOfDay" == "true" ]; then
+	if [ "$timeOfDay" == "true" ]; then
 		echo "Welcome back to weatherapp!"
 		printf '\n\n'
 	else
 		echo "Keeping it quiet..."
 		printf '\n\n'
 	fi
+	
 	display_forecast
 else
 	echo "Welcome to weatherapp, let's get started."
@@ -373,13 +481,13 @@ fi
 
 
 
-#TODO: rename file
-FILE2=/home/ben/weatherappinfoforecast.txt
-curl -s $userForecast -o weatherappinfoforecast.txt
+#TODO: rename file and make constant
+#FILE2=/home/ben/weatherappinfoforecast.txt
+#curl -s $userForecast -o weatherappinfoforecast.txt
 
-#TODO: rename file
-FILE3=/home/ben/weatherappinfohourlyforecast.txt
-curl -s $userHourlyForecast -o weatherappinfohourlyforecast.txt
+#TODO: rename file and make constant
+#FILE3=/home/ben/weatherappinfohourlyforecast.txt
+#curl -s $userHourlyForecast -o weatherappinfohourlyforecast.txt
 
 
 
