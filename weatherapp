@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # TODO: add user-agent for NWS 
+# TODO: set/get directory_name function for writing files to
 
 # constants
 RED='\033[0;31m'
@@ -289,6 +290,57 @@ local temp=$(grep -m${number} '"temperature": ..' weatherappinfohourlyforecast.t
 echo $temp
 }
 
+get_daytime () {
+number=$(get_forecast_number)
+local dayTime=$(grep -m${number} '"isDaytime": ..' weatherappinfohourlyforecast.txt | sed 's/^.............................//' | tail -n1 | sed 's/,//g')
+echo $dayTime
+}
+
+get_windspeed () {
+number=$(get_forecast_number)
+local windSpeed=$(grep -m${number} '"windSpeed": ..' weatherappinfohourlyforecast.txt | sed 's/^..............................//' | cut -c1-2 | tail -n1 | sed 's/,//g')
+
+echo $windSpeed
+}
+
+get_winddirection () {
+number=$(get_forecast_number)
+local windDirection=$(grep -m${number} '"windDirection": ..' weatherappinfohourlyforecast.txt | sed 's/^..................................//' | cut -c1-2 | tail -n1 | sed 's/,//g' | sed 's/"//g')
+case $windDirection in
+N)
+	windDirection="North"
+	;;
+E)
+	windDirection="East"
+	;;
+S)
+	windDirection="South"
+	;;
+W)
+	windDirection="West"
+	;;
+NE)
+	windDirection="North-East"
+	;;
+SE)
+	windDirection="South-East"
+	;;
+SW)
+	windDirection="South-West"
+	;;
+NW)
+	windDirection="North-West"
+	;;
+esac
+echo $windDirection
+}
+
+get_short_forecast () {
+number=$(get_forecast_number)
+local shortForecast=$(grep -m${number} '"shortForecast": ..' weatherappinfohourlyforecast.txt | sed 's/^..................................//' | tail -n1 | sed 's/,//g' | sed 's/"//g' | sed 's/[{}]//g')
+echo $shortForecast
+}
+
 display_forecast () {
 time_of_day_gfx
 echo "$hourlyForeCastTime"
@@ -297,17 +349,20 @@ userHourlyForecast=$(get_hourly_forecast)
 userLoc=$(get_user_loc)
 timeStampTime=$(get_time_stamp | sed 's/^................//')
 timeStampDate=$(get_time_stamp | grep -oE "^.{1,12}\w*")
- 
-
+dayTime=$(get_daytime) 
+if [ "$dayTime" == "true" ]; then
+	printf '                       Welcome to daytime weatherapp!\n\n\n'
+else
+	printf '                       Welcome to night-time weatherapp\n\n\n'
+fi
 nwsOffice=$(grep -m1 '"cwa": ..' weatherappinfo.txt | sed 's/^...............//' | sed 's/,//g')
-echo -e "Displaying forecast data for ${BLUE}$timeStampDate${NC} at ${BLUE}$timeStampTime${NC}"
-printf '\n\n'
-echo -e "NWS office ${BLUE}$nwsOffice${NC}, at points: ${BLUE}$userLoc${NC}" | sed 's/"//g'
-printf '\n'
 
-userCity=$(grep -m2 '"city": ..' weatherappinfo.txt | sed 's/"//g' | sed 's/^....................//' | sed 's/.$//' | sed 's/: //' | sed 's/addressLocality//g')
-echo -e "your NWS office location is: ${BLUE}$userCity${NC}" 
-printf '\n\n'
+userCity=$(grep -m2 '"city": ..' weatherappinfo.txt | sed 's/"//g' | sed 's/^....................//' | sed 's/.$//' | sed 's/: //' | tail -n1)
+userState=$(grep -m2 '"state": ..' weatherappinfo.txt | sed 's/"//g' | sed 's/^.....................//' | sed 's/.$//' | sed 's/: //' | tail -n1)
+echo -e "your local NWS office is located in: ${BLUE}$userCity${NC}, ${BLUE}$userState${NC}" 
+printf '\n'
+echo -e "your local CWA is: ${BLUE}$nwsOffice${NC}, at points: ${BLUE}$userLoc${NC}" | sed 's/"//g'
+
 
 #echo "your hourly forecast link is: " 
 #echo -e "${BLUE}$userHourlyForecast${NC}"
@@ -316,8 +371,14 @@ printf '\n\n'
 temp=$(get_temp)
 degreesInF="° F"
 degreesInC="° C"
-
-
+windSpeed=$(get_windspeed)
+windSpeedInMph="$windSpeed mph"
+windSpeedInKmh="$windSpeed kmh"
+windDirection=$(get_winddirection)
+shortForecast=$(get_short_forecast)
+echo -e "Displaying forecast data for ${BLUE}$timeStampDate${NC} at ${BLUE}$timeStampTime${NC}"
+printf '\n'
+echo -e "It's ${BLUE}$shortForecast${NC} outside"
 if [ $temp -gt 85 ]; then
 	echo -e "Current temperature: ${RED}$temp$degreesInF${NC}" | sed 's/"//g'
 elif [ $temp -gt 65 ] && [ $temp -lt 85 ]; then
@@ -327,6 +388,8 @@ elif [ $temp -lt 65 ] && [ $temp -gt 55 ]; then
 else
 	echo -e "Current temperature: ${BLUE}$temp$degreesInF${NC}" | sed 's/"//g'
 fi
+
+echo -e "Wind speed: ${BLUE}$windSpeedInMph${NC} blowing from the ${BLUE}$windDirection${NC}"
 printf '\n\n\n\n'
 read -p "press enter to exit or type m to go to main-menu: " userChoice
 if [ "$userChoice" == "m" ]; then 
@@ -354,7 +417,7 @@ echo -e "                                      			                \\\`"
 echo -e "                                                                          |"
 echo -e "                                                                        /,"
 echo -e "                                                                         "
-echo -e "  									     "
+
 elif [ "$meridianPosition" == "PM" ] && [ $hourNow -ge 8 ]; then
 printf '\n'
 local isDayTime="false"
@@ -362,7 +425,7 @@ echo -e "                                      			                \\\`"
 echo -e "                                                                         |"
 echo -e "                                                                        /,"
 echo -e "                                                                         "
-echo -e "  									     "	
+
 elif [ "$meridianPosition" == "AM" ] && [ $hourNow -ge 12 ]; then
 printf '\n'
 local isDayTime="false"
@@ -370,7 +433,7 @@ echo -e "                                      			                \\\`"
 echo -e "                                                                          |"
 echo -e "                                                                        /,"
 echo -e "                                                                         "
-echo -e "  									     "
+
 else
 echo -e "${YELLOW} 		                                                      .     ."
 echo -e "   		                                                       .###."
