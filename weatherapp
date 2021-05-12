@@ -2,8 +2,6 @@
 
 # TODO: set/get directory_name function for writing files to
 
-# TODO: check_status before get_forecast_number, and display_forecast. updates if last fetched date > 1 day
-
 # constants
 USERAGENT="weatherapp for linux terminal, benvancise@gmail.com"
 RED='\033[0;31m'
@@ -600,13 +598,6 @@ set_weather_info_fast () {
 		display_forecast
 }
 
-#get_weather_info () { 
-#userLoc=$(grep '"id": ' weatherappinfo.txt | sed 's/[^0-9,]//g' | sed -r 's/\s+//g' | #sed 's/.$//')
-
-#curl -s --user-agent "$USERAGENT" https://api.weather.gov/points/$userLoc -o #"weatherappinfo.txt"
-#
-#userForecast=$(grep '"forecast": ' weatherappinfo.txt | sed 's/"//g' | sed 's/loc//g' #| sed 's/.$//' | sed 's/: //' | sed -r 's/\s+//g')
-#}
 #######################################################################################
 #######################################################################################
 currentUser=$(check_user)
