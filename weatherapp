@@ -2,6 +2,8 @@
 
 # TODO: set/get directory_name function for writing files to
 
+
+
 # constants
 USERAGENT="weatherapp for linux terminal, benvancise@gmail.com"
 RED='\033[0;31m'
@@ -13,8 +15,10 @@ ARROWUP='\[A'
 ARROWDOWN='\[B'
 ARROWRIGHT='\[C'
 ARROWLEFT='\[D'
+MENU='m'
 EXITTRUE=0
 EXITFALSE=1
+
 
 # Checks if a user configuration file has been created, returns 1 if found
 check_user () {
@@ -203,12 +207,18 @@ case $mainMenuOption in
 	;;
 2)
 	clear
-	echo -e "			${BLUE}       Keybindings${NC}"
-	printf '\n\n'
-	echo "'Up-arrow'    : Increment forecast hour"
-	echo "'Down-arrow'  : Decrement forecast hour"
-	echo "'Right-arrow' : Increment forecast day"
-	echo "'Left-arrow'  : Decrement forecast day"
+	echo -e "			${BLUE}     Forecast view Keybindings${NC}"
+	printf '\n\n\n\n\n\n'
+	echo -e "'${BLUE}Up-arrow${NC}'    : Increment advanced-forecast view day"
+	printf '\n'
+	echo -e "'${BLUE}Down-arrow${NC}'  : Decrement advanced-forecast view day"
+	printf '\n'
+	echo -e "'${BLUE}Right-arrow${NC}' : Increment advanced-forecast view hour"
+	printf '\n'
+	echo -e "'${BLUE}Left-arrow${NC}'  : Decrement advanced-forecast view hour"
+	printf '\n\n\n\n\n\n\n\n\n'
+	read -p "press 'enter' to return to main-menu"
+			main_menu
 	;;
 3)
 	clear
@@ -228,11 +238,11 @@ case $mainMenuOption in
 	;;
 4)
 	clear
-	check_status
+	set_weather_info_fast
 	;;
 5)
 	clear
-	display_forecast
+	display_forecast_live
 	;;
 *)
 	clear
@@ -250,14 +260,48 @@ if [ $userAuth ]; then
 		set_weather_info_fast
 	else
 		clear
-		echo "$FILE not changed, using stored location information."
+		echo "$FILE not changed, using stored location information..."
 		sleep 2
-		display_forecast
+		display_forecast_live
 	fi
 else 
 	"$FILE does not exist, fetching info from weather.gov"
 	set_weather_info 
 fi
+}
+
+forecast_user_prompt () { 
+printf 'press enter to exit or type m to go to main-menu:  '
+read -n3 userChoice
+	case $userChoice in
+	$(echo -n "$userChoice" | grep "$MENU"))
+		main_menu
+		;;
+	$(echo -n "$userChoice" | grep "$ARROWLEFT"))
+		echo "forecast number before = $currentForecastNumber"
+		currentForecastNumber=$((currentForecastNumber-1))
+		userInputValue=$((userInputValue-1))
+		echo "decremented, forecast number after = $currentForecastNumber"
+display_advance_forecast
+		;;
+	$(echo -n "$userChoice" | grep "$ARROWRIGHT"))
+		echo "forecast number before = $currentForecastNumber"
+		currentForecastNumber=$((currentForecastNumber+1))
+		userInputValue=$((userInputValue+1))
+		echo "incremented, forecast number after = $currentForecastNumber"
+		display_advance_forecast
+		;;
+	$(echo -n "$userChoice" | grep "$ARROWUP"))
+		echo "up arrow"
+		display_advance_forecast
+		;;
+	$(echo -n "$userChoice" | grep "$ARROWDOWN"))
+		echo "down arrow"
+		display_advance_forecast
+		;;
+	esac
+	
+
 }
 
 #TODO: grep for minutes in current time, if current minute >= 3 foreCastNumber++
@@ -400,15 +444,165 @@ local shortForecast=$(grep -m${number} '"shortForecast": ..' weatherappinfohourl
 echo $shortForecast
 }
 
-get_forecast_hour () { 
-
+custom_forecast_temp () { 
+number=$currentForecastNumber
+local temp=$(grep -m${number} '"temperature": ..' weatherappinfohourlyforecast.txt | sed 's/^...............................//' | cut -c1-2 | tail -n1)
+echo $temp
 }
 
-get_forecast_day () {
-
+custom_daytime () {
+number=$currentForecastNumber
+local dayTime=$(grep -m${number} '"isDaytime": ..' weatherappinfohourlyforecast.txt | sed 's/^.............................//' | tail -n1 | sed 's/,//g')
+echo $dayTime
 }
 
-display_forecast () {
+custom_hour () {
+number=$currentForecastNumber
+local hourlyForeCastStartTimeHour=$(grep -m${number} '"startTime": ' weatherappinfohourlyforecast.txt | sed 's/"//g' | sed 's/.$//' | sed 's/^......................................//' | cut -c1-5 | tail -n1)
+echo $hourlyForeCastStartTimeHour
+}
+
+custom_day () {
+number=$currentForecastNumber
+local hourlyForeCastDate=$(grep -m${number} '"startTime": ' weatherappinfohourlyforecast.txt | sed 's/"//g' | sed 's/.$//' | sed 's/startTime//g' | sed 's/endTime//g' | sed 's/://g' | tail -n1  | sed s'/^.................//' | cut -c1-10)
+echo $hourlyForeCastDate
+}
+
+custom_winddirection () {
+number=$currentForecastNumber
+local windDirection=$(grep -m${number} '"windDirection": ..' weatherappinfohourlyforecast.txt | sed 's/^..................................//' | cut -c1-3 | tail -n1 | sed 's/,//g' | sed 's/"//g')
+case $windDirection in
+N)
+	windDirection="blowing from the ${BLUE}North${NC}"
+	;;
+E)
+	windDirection="blowing from the ${BLUE}East${NC}"
+	;;
+S)
+	windDirection="blowing from the ${BLUE}South${NC}"
+	;;
+W)
+	windDirection="blowing from the ${BLUE}West${NC}"
+	;;
+NE)
+	windDirection="blowing from the ${BLUE}North-East${NC}"
+	;;
+SE)
+	windDirection="blowing from the ${BLUE}South-East${NC}"
+	;;
+SW)
+	windDirection="blowing from the ${BLUE}South-West${NC}"
+	;;
+NW)
+	windDirection="blowing from the ${BLUE}North-West${NC}"
+	;;
+NNE)
+	windDirection="blowing from the ${BLUE}North-Northeast${NC}"
+	;;
+ENE)
+	windDirection="blowing from the ${BLUE}East-Northeast${NC}"
+	;;
+ESE)
+	windDirection="blowing from the ${BLUE}East-Southeast${NC}"
+	;;
+SSE)
+	windDirection="blowing from the ${BLUE}South-Southeast${NC}"
+	;;
+SSW)
+	windDirection="blowing from the ${BLUE}South-Southwest${NC}"
+	;;
+WSW)
+	windDirection="blowing from the ${BLUE}West-Southwest${NC}"
+	;;
+WNW)
+	windDirection="blowing from the ${BLUE}West-Northwest${NC}"
+	;;
+NNW)
+	windDirection="blowing from the ${BLUE}North-Northwest${NC}"
+	;;
+VAR)
+	windDirection="with ${BLUE}variable wind direction${NC}"
+	;;
+CLM)
+	windDirection="with ${BLUE}calm winds${NC}"
+	;;
+ALL)
+	windDirection="at ${BLUE}all direction categories combined${NC}"
+	;;
+esac
+echo $windDirection
+}
+
+custom_windspeed () {
+number=$currentForecastNumber
+local windSpeed=$(grep -m${number} '"windSpeed": ..' weatherappinfohourlyforecast.txt | sed 's/^..............................//' | cut -c1-2 | tail -n1 | sed 's/,//g')
+
+echo $windSpeed
+}
+
+custom_short_forecast () {
+number=$currentForecastNumber
+local shortForecast=$(grep -m${number} '"shortForecast": ..' weatherappinfohourlyforecast.txt | sed 's/^..................................//' | tail -n1 | sed 's/,//g' | sed 's/"//g' | sed 's/[{}]//g')
+echo $shortForecast
+}
+
+#prev_forecast_hour () {
+
+#}
+
+#custom_forecast_day () {
+
+#}
+
+#prev_forecast_day () {
+
+#}
+
+display_advance_forecast () {
+clear
+printf '                           weatherapp advanced-forecast view'
+userForecast=$(get_forecast_link)
+userHourlyForecast=$(get_hourly_forecast_link)
+userLoc=$(get_coords)
+customHour=$(custom_hour)
+echo $customHour
+customDay=$(custom_day)
+dayTime=$(custom_daytime) 
+custom_time_of_day_gfx
+userCwa=$(grep '"cwa": ..' weatherappinfo.txt | sed 's/^...............//' | sed 's/,//g')
+
+userCity=$(grep '"city": ..' weatherappinfo.txt | sed 's/"//g' | sed 's/^....................//' | sed 's/.$//' | sed 's/: //' | tail -n1)
+userState=$(grep '"state": ..' weatherappinfo.txt | sed 's/"//g' | sed 's/^.....................//' | sed 's/.$//' | sed 's/: //' | tail -n1)
+echo -e "your local NWS office is located in: ${BLUE}$userCity${NC}, ${BLUE}$userState${NC}" 
+printf '\n'
+echo -e "your local CWA is: ${BLUE}$userCwa${NC}, at points: ${BLUE}$userLoc${NC}" | sed 's/"//g'
+printf '\n\n\n'
+temp=$(custom_forecast_temp)
+degreesInF="° F"
+degreesInC="° C"
+windSpeed=$(custom_windspeed)
+windSpeedInMph="$windSpeed mph"
+windSpeedInKmh="$windSpeed kmh"
+windDirection=$(custom_winddirection)
+shortForecast=$(custom_short_forecast)
+echo -e "Displaying forecast data for ${BLUE}$customDay${NC} at ${BLUE}$customHour${NC}"
+printf '\n\n'
+echo -e "It looks like it will be ${BLUE}$shortForecast${NC} outside"
+if [ $temp -gt 85 ]; then
+	echo -e "With a temperature around: ${RED}$temp$degreesInF${NC}" | sed 's/"//g'
+elif [ $temp -gt 65 ] && [ $temp -lt 85 ]; then
+	echo -e "With a temperature around: ${YELLOW}$temp$degreesInF${NC}" | sed 's/"//g'
+elif [ $temp -lt 65 ] && [ $temp -gt 55 ]; then
+	echo -e "With a temperature around: ${GREEN}$temp$degreesInF${NC}" | sed 's/"//g'
+else
+	echo -e "With a temperature around: ${BLUE}$temp$degreesInF${NC}" | sed 's/"//g'
+fi
+echo -e "Wind speed is forecasted to be around: ${BLUE}$windSpeedInMph${NC} $windDirection"
+printf '\n\n\n\n\n\n'
+forecast_user_prompt
+}
+
+display_forecast_live () {
 clear
 userForecast=$(get_forecast_link)
 userHourlyForecast=$(get_hourly_forecast_link)
@@ -419,21 +613,18 @@ dayTime=$(get_daytime)
 if [ "$dayTime" == "true" ]; then
 	printf '                     Good day, welcome to weatherapp live-view!'
 else
-	printf "                     Welcome to weatherapp's night-time live-view"
+	printf "                               weatherapp live-view"
 fi
 time_of_day_gfx
 userCwa=$(grep '"cwa": ..' weatherappinfo.txt | sed 's/^...............//' | sed 's/,//g')
 
 userCity=$(grep '"city": ..' weatherappinfo.txt | sed 's/"//g' | sed 's/^....................//' | sed 's/.$//' | sed 's/: //' | tail -n1)
 userState=$(grep '"state": ..' weatherappinfo.txt | sed 's/"//g' | sed 's/^.....................//' | sed 's/.$//' | sed 's/: //' | tail -n1)
+printf '\n'
 echo -e "your local NWS office is located in: ${BLUE}$userCity${NC}, ${BLUE}$userState${NC}" 
 printf '\n'
 echo -e "your local CWA is: ${BLUE}$userCwa${NC}, at points: ${BLUE}$userLoc${NC}" | sed 's/"//g'
-
-
-
 printf '\n\n\n'
-
 temp=$(get_temp)
 degreesInF="° F"
 degreesInC="° C"
@@ -454,25 +645,34 @@ elif [ $temp -lt 65 ] && [ $temp -gt 55 ]; then
 else
 	echo -e "Current temperature: ${BLUE}$temp$degreesInF${NC}" | sed 's/"//g'
 fi
-
 echo -e "Wind speed: ${BLUE}$windSpeedInMph${NC} $windDirection"
-printf '\n\n\n\n\n\n\n'
-
+printf '\n\n\n\n\n'
 (sleep 35m && set_weather_info_fast)&
-printf 'press enter to exit or type m to go to main-menu:  '
-read -n3 userChoice
-if [ "$userChoice" == "m" ]; then 
-	main_menu
-#elif [ 
-fi
+forecast_user_prompt
 }
 
 time_of_day_gfx () {
-
-#local isDayTime=$(grep -m1 '"isDaytime": ..' weatherappinfoforecast.txt | sed 's/"//g' | sed 's/^...........................//' | sed 's/.$//')
 dayTime=$(get_daytime)
-hourNow=$(get_date | sed 's/^................//' |cut -c1-2)
-meridianPosition=$(get_date | sed 's/^.........................//' |cut -c1-2)
+if [ "$dayTime" == "true" ]; then
+printf '\n'
+local isDayTime="true"
+echo -e "${YELLOW}                                                                      .     ."
+echo -e "   		                                                       .###."
+echo -e "		                                                   - - #  # - -"
+echo -e "  	                                                              .###."
+echo -e "  		                                                     .     .${NC}"
+else
+printf '\n'
+local isDayTime="false"
+echo -e "                                      			                \\\`"
+echo -e "                                                                          |"
+echo -e "                                                                        /,"
+echo -e "                                                                         "
+fi
+}
+
+custom_time_of_day_gfx () {
+dayTime=$(custom_daytime)
 if [ "$dayTime" == "true" ]; then
 printf '\n'
 local isDayTime="true"
@@ -580,11 +780,10 @@ read -p "[y/n] " userChoice
 		set_forecast_link 
 		set_time_stamp_date
 		set_time_stamp_hour
-		display_forecast
+		display_forecast_live
 	else 
 		return[n]
 	fi
-
 }
 
 # sets weather info and bypasses permissions
@@ -595,11 +794,13 @@ set_weather_info_fast () {
 		set_time_stamp_date
 		set_time_stamp_hour
 		clear
-		display_forecast
+		display_forecast_live
 }
 
 #######################################################################################
 #######################################################################################
+currentForecastNumber=$(get_forecast_number)
+userInputValue=0
 currentUser=$(check_user)
 clear
 if [ $currentUser -eq 1 ]; then
