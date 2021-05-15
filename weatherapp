@@ -2,8 +2,6 @@
 
 # TODO: set/get directory_name function for writing files to
 
-
-
 # constants
 USERAGENT="weatherapp for linux terminal, benvancise@gmail.com"
 RED='\033[0;31m'
@@ -18,7 +16,6 @@ ARROWLEFT='\[D'
 EXITTRUE=0
 EXITFALSE=1
 
-
 # Checks if a user configuration file has been created, returns 1 if found
 check_user () {
 USER=/home/ben/weatherappprefs.txt
@@ -31,15 +28,11 @@ else
 fi	
 }
 
-
-
 get_temp () {
 number=$(get_forecast_number)
 local temp=$(grep -m${number} '"temperature": ..' weatherappinfohourlyforecast.txt | sed 's/^...............................//' | cut -c1-2 | tail -n1)
 echo $temp
 }
-
-
 
 initial_setup () {
 USERPREFS=/home/ben/weatherappprefs.txt
@@ -234,7 +227,6 @@ case $mainMenuOption in
 			main_menu
 		fi
 	else 
-		
 		echo -e "User configuration file ${RED}not found${NC}, running initial setup..."
 		printf '\n\n'
 		sleep 2
@@ -323,7 +315,6 @@ hourlyForeCastTime="$currentDate"T"$currentTime"
 hourlyForeCastStartTimeHour=$(grep -m${i} '"startTime": ' weatherappinfohourlyforecast.txt | sed 's/"//g' | sed 's/.$//' | sed 's/^......................................//' | cut -c1-2 | tail -n1)
 hourlyForeCastEndTimeHour=$(grep -m${i} '"endTime": ' weatherappinfohourlyforecast.txt | sed 's/"//g' | sed 's/.$//' | sed 's/^....................................//' | cut -c1-2 | tail -n1)
 hourlyForeCastTimeHour=$(echo $hourlyForeCastTime | sed 's/^...........//' | cut -c1-2)
-
 hourlyForeCastTimeMinutes=$(echo $hourlyForeCastTime | sed 's/^..............//' | cut -c1-2)
 while [ $tempNotFound -eq 1 ]
 do	
@@ -798,11 +789,7 @@ set_weather_info_fast () {
 		update_hourly_forecast
 		set_time_stamp_date
 		set_time_stamp_hour
-		
 }
-
-#######################################################################################
-#######################################################################################
 
 currentForecastNumber=$(get_forecast_number)
 userInputValue=0
