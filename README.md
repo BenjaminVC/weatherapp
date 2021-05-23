@@ -3,6 +3,8 @@ weather application for the linux terminal
 
 weatherapp is a live application for the linux terminal that uses latitudinal and longitudinal geographic 
 coordinates to access live weather information, provided by the NWS API. 
+![weatherapp liveview](https://github.com/[BenjaminVC]/[weatherapp]/blob/[main]/wthapplive.png?raw=true)
+
 
 weatherapp also allows for viewing advanced forecast information. 
 To view advanced forecasts, from the weatherapp live-view, simply use the arrow-keys to navigate by hour and/or day.
