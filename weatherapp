@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash 
 
 # TODO: set/get directory_name function for writing files to
 
@@ -155,6 +155,9 @@ main_menu
 
 #TODO: grep USERPREFS file to view and change initialized settings in terminal window 
 main_menu() {
+#unset $mainMentuOption
+sleep=$(pidof sleep)
+kill $sleep
 clear
 echo -e "			${BLUE}       weatherapp MAIN-MENU${NC}"
 printf '\n\n'
@@ -186,7 +189,9 @@ case $mainMenuOption in
 	echo -e "'${BLUE}Right-arrow${NC}' : Increment advanced-forecast view hour"
 	printf '\n'
 	echo -e "'${BLUE}Left-arrow${NC}'  : Decrement advanced-forecast view hour"
-	printf '\n\n\n\n\n\n\n\n\n'
+	printf '\n'
+	echo -e "'${BLUE}Enter${NC}'       : Update and display live-forecast view"
+	printf '\n\n\n\n\n\n\n'
 	read -p "press 'enter' to return to main-menu"
 			main_menu
 	;;
@@ -194,15 +199,14 @@ case $mainMenuOption in
 	clear
 	echo -e "			${BLUE}       About weatherapp${NC}"
 	printf '\n\n\n'
-	echo "weatherapp is a live application for the linux terminal that uses "
-	echo "latitudinal and longitudinal geographic coordinates to access  "
-	echo "accurate weather information, provided by the NWS."
-	printf '\n\n\n'
+	echo "weatherapp is a live application (updated every 15 minutes) for the linux "
+	echo "terminal that uses latitudinal and longitudinal geographic coordinates to "
+	echo "access accurate weather information, provided by the NWS."
+	printf '\n\n\n\n'
 	echo "weatherapp also allows for viewing advanced forecast information. "
-	printf '\n\n'
 	echo "To view advanced forecasts, from the weatherapp live-view, "
 	echo "simply use the arrow-keys to navigate by hour and/or day."
-	printf '\n\n\n\n\n\n\n\n'
+	printf '\n\n\n\n\n\n\n\n\n'
 	read -p "press enter to return to main-menu"
 			main_menu
 	;;
@@ -215,6 +219,8 @@ case $mainMenuOption in
 		printf '\n\n\n\n'
 		read -p "[y/n] " userConfigChoice
 		if [ "$userConfigChoice" == "y" ]; then 
+			clear
+			echo "Are you sure? weatherapp will need to be reconfigured after removing the current user-configuration file."
 			printf '\n\n'
 			echo "Enter 'y' again to confirm"
 			printf '\n\n\n'
@@ -234,20 +240,22 @@ case $mainMenuOption in
 		initial_setup
 	fi
 	;;
-5)
+5)	
 	clear
 	display_forecast_live
 	;;
-*)
-	clear
-	main_menu
+*)	
+	sleep=$(pidof sleep)
+	kill $sleep
+	#display_forecast_live
+	;;
 esac
 }
 		
 check_status () {		
 FILE=/home/ben/weatherappinfo.txt
 lastUpdated=$(get_time_stamp_date | sed 's/^.....//' | sed 's/-//g')
-currentDate=$(get_current_date | sed 's/^.....//' | sed 's/-//g')
+currentDate=$(get_date | sed 's/^.....//' | sed 's/-//g')
 userAuth=$(check_user)
 if [ $userAuth ]; then 
 	if [ $currentDate -gt $lastUpdated ]; then
@@ -264,44 +272,57 @@ else
 fi
 }
 
+#runtime () { 
+
+#}
+
+#TODO: Because user_prompt does not get successful exit code... inf loop...? 
+# ...or make separate function to sleep and check for outdated info, restarts weatherapp if true
 forecast_user_prompt () { 
-read -n3 -p "press 'enter' to go to the main-menu, or type 'q' to quit weatherapp:  " userChoice
-	case $userChoice in
+read -t900 -n3 -p "type and enter 'm' for the main-menu or 'q' to quit weatherapp:  " userChoice
+	case $userChoice in 
 	q)
 		echo -e "${GREEN}exit 0${NC}\n\n\n"
 		exit 0
 		;;	
-	"")
+	'')
+		display_forecast_live
+		;;
+	m)
 		main_menu
 		;;
 	$(echo -n "$userChoice" | grep "$ARROWLEFT"))
+		sleep=$(pidof sleep)
+		kill $sleep
 		currentForecastNumber=$((currentForecastNumber-1))
 		userInputValue=$((userInputValue-1))
 		display_advance_forecast
 		;;
 	$(echo -n "$userChoice" | grep "$ARROWRIGHT"))
+		
 		currentForecastNumber=$((currentForecastNumber+1))
 		userInputValue=$((userInputValue+1))
 		display_advance_forecast
 		;;
 	$(echo -n "$userChoice" | grep "$ARROWUP"))
+		
 		currentForecastNumber=$((currentForecastNumber+24))
 		userInputValue=$((userInputValue+24))
 		display_advance_forecast
 		;;
 	$(echo -n "$userChoice" | grep "$ARROWDOWN"))
+		
 		currentForecastNumber=$((currentForecastNumber-24))
 		userInputValue=$((userInputValue-24))
 		display_advance_forecast
 		;;
 	*)
-		echo -e "${GREEN}exit 0${NC}\n\n\n"
-		exit 0
+		
+		display_forecast_live
 		;;
 	esac
 }
 
-#TODO: grep for minutes in current time, if current minute >= 3 foreCastNumber++
 get_forecast_number () {
 i=1
 j=$i
@@ -541,10 +562,11 @@ echo $shortForecast
 }
 
 display_advance_forecast () {
+
+sleep=$(pidof sleep)
+kill $sleep
 clear
 printf '                           weatherapp advanced-forecast view'
-userForecast=$(get_forecast_link)
-userHourlyForecast=$(get_hourly_forecast_link)
 userLoc=$(get_coords)
 customHour=$(custom_hour)
 customDay=$(custom_day)
@@ -588,10 +610,12 @@ forecast_user_prompt
 }
 
 display_forecast_live () {
+sleep=$(pidof sleep)
+kill $sleep
 set_weather_info_fast
 clear
-userForecast=$(get_forecast_link)
-userHourlyForecast=$(get_hourly_forecast_link)
+#userForecast=$(get_forecast_link)
+#userHourlyForecast=$(get_hourly_forecast_link)
 userLoc=$(get_coords)
 timeStampTime=$(get_time_stamp_hour)
 timeStampDate=$(get_time_stamp_date)
@@ -621,7 +645,7 @@ windSpeedInKmh="$windSpeed kmh"
 windDirection=$(get_winddirection)
 shortForecast=$(get_short_forecast)
 echo -e "Displaying hourly forecast data for ${BLUE}$timeStampDate${NC} at ${BLUE}$timeStampTime${NC}"
-printf '\n\n\n'
+printf '\n\n'
 if [ $temp -gt 85 ]; then
 	printf '\n'
 	echo -e "It's ${BLUE}$shortForecast${NC} outside $tod, with a current temperature of ${RED}$temp$degreesInF${NC}" | sed 's/"//g'
@@ -637,9 +661,10 @@ else
 fi
 printf '\n'
 echo -e "Wind speed: ${BLUE}$windSpeedInMph${NC} $windDirection"
+if [ "$dayTime" != "true" ]; then
+	printf '\n'	
+fi
 printf '\n\n\n'
-#TODO: Fix sleep, add wait/kill process
-#(sleep 5 && display_forecast_live)&
 forecast_user_prompt
 }
 
@@ -783,7 +808,7 @@ read -p "[y/n] " userChoice
 	fi
 }
 
-# sets and updates weather info, bypasses permissions
+# writes new timestamp and updates weather info, bypasses permissions
 set_weather_info_fast () {
 		clear
 		update_hourly_forecast
@@ -807,5 +832,4 @@ else
 	initial_setup
 fi
 echo -e "${GREEN}exit 0${NC}\n\n\n"
-
 exit 0
