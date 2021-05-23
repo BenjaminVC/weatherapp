@@ -1,7 +1,7 @@
 # weatherapp
-weather application for the linux terminal
+A light-weight, live weather application for the linux terminal.
 
-weatherapp is a live application for the linux terminal that uses latitudinal and longitudinal geographic 
+<b>weatherapp</b> is a live application for the linux terminal that uses latitudinal and longitudinal geographic 
 coordinates to access live weather information, provided by the NWS API. 
 ![weatherapp liveview](https://github.com/BenjaminVC/weatherapp/blob/main/wthapplive.png?raw=true)
 
