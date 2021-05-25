@@ -13,6 +13,14 @@ ARROWUP='\[A'
 ARROWDOWN='\[B'
 ARROWRIGHT='\[C'
 ARROWLEFT='\[D'
+#main-menu
+F1='\OP'
+#show/hide controls
+F3='\OR'
+#refresh
+F5='\15'
+#exit
+F12='\24'
 EXITTRUE=0
 EXITFALSE=1
 
@@ -258,38 +266,50 @@ lastUpdated=$(get_time_stamp_date | sed 's/^.....//' | sed 's/-//g')
 currentDate=$(get_date | sed 's/^.....//' | sed 's/-//g')
 userAuth=$(check_user)
 if [ $userAuth ]; then 
-	if [ $currentDate -gt $lastUpdated ]; then
-		set_weather_info_fast
-	else
-		clear
-		echo -e "${BLUE}$FILE${NC} not changed, using stored location information..."
-		sleep 2
-		display_forecast_live
-	fi
-else 
-	"$FILE does not exist, fetching info from weather.gov"
+	clear
+	echo -e "${BLUE}$FILE${NC} found, loading forecast info..."
+	sleep 2
+	set_weather_info_fast
+	display_forecast_live
+else
+s	"$FILE does not exist, fetching info from weather.gov"
 	set_weather_info 
 fi
 }
 
-#runtime () { 
+display_controls () {
+printf '\n\n'
 
-#}
+	echo -e "[${BLUE}Up-arrow${NC}]   [${BLUE}Down-arrow${NC}]   [${BLUE}Right-arrow${NC}]   [${BLUE}Left-arrow${NC}]        [${BLUE}Enter${NC}]${NC}"   
+	echo -en "  +1 day        -1 day          +1 hour        -1 hour     refresh live-view"
+read -s -r -n3 uI
+if [ $(echo -n "$uI" | grep "$F3") ]; then
+	showKeys="false"
+fi
+display_forecast_live
+}
 
 #TODO: Because user_prompt does not get successful exit code... inf loop...? 
 # ...or make separate function to sleep and check for outdated info, restarts weatherapp if true
 forecast_user_prompt () { 
-read -t900 -n3 -p "type and enter 'm' for the main-menu or 'q' to quit weatherapp:  " userChoice
+read -t900 -n3 -p "[F1] to go main-menu, [F12] to quit, or [F3] to toggle help on/off" userChoice
 	case $userChoice in 
 	q)
+	#$(echo -n "$userChoice" | grep "$F12"))
 		echo -e "${GREEN}exit 0${NC}\n\n\n"
 		exit 0
 		;;	
-	'')
+	$(echo -n "$userChoice" | grep "$F5"))
 		display_forecast_live
 		;;
-	m)
+	$(echo -n "$userChoice" | grep "$F1"))
 		main_menu
+		;;
+	$(echo -n "$userChoice" | grep "$F3"))
+		
+		#display_controls
+		showKeys="true"
+		display_forecast_live
 		;;
 	$(echo -n "$userChoice" | grep "$ARROWLEFT"))
 		sleep=$(pidof sleep)
@@ -562,15 +582,21 @@ echo $shortForecast
 }
 
 display_advance_forecast () {
-
-sleep=$(pidof sleep)
-kill $sleep
 clear
-printf '                           weatherapp advanced-forecast view'
+if [ $currentForecastNumber -ge 156 ]; then
+	echo -en "\007"
+	currentForecastNumber=156
+	userInputValue=$currentForecastNumber
+elif [ $currentForecastNumber -lt 1 ]; then
+	echo -en "\007"
+	currentForecastNumber=1
+	userInputValue=$currentForecastNumber
+fi
 userLoc=$(get_coords)
 customHour=$(custom_hour)
 customDay=$(custom_day)
 dayTime=$(custom_daytime) 
+echo -e -en "               Displaying forecast data for ${BLUE}$customDay${NC} at ${BLUE}$customHour${NC}"
 custom_time_of_day_gfx
 printf '\n'
 userCwa=$(grep '"cwa": ..' weatherappinfo.txt | sed 's/^...............//' | sed 's/,//g')
@@ -588,9 +614,10 @@ windSpeedInMph="$windSpeed mph"
 windSpeedInKmh="$windSpeed kmh"
 windDirection=$(custom_winddirection)
 shortForecast=$(custom_short_forecast)
-echo -e "Displaying forecast data for ${BLUE}$customDay${NC} at ${BLUE}$customHour${NC}"
+
 printf '\n\n'
 echo -e "Short forecast: ${BLUE}$shortForecast${NC} outside"
+printf '\n'
 if [ $temp -gt 85 ]; then
 	echo -e "Forecasted temperature: ${RED}$temp$degreesInF${NC}" | sed 's/"//g'
 elif [ $temp -gt 65 ] && [ $temp -lt 85 ]; then
@@ -600,33 +627,49 @@ elif [ $temp -lt 65 ] && [ $temp -gt 55 ]; then
 else
 	echo -e "Forecasted temperature: ${BLUE}$temp$degreesInF${NC}" | sed 's/"//g'
 fi
+printf '\n'
 echo -e "Wind speed is forecasted to be around: ${BLUE}$windSpeedInMph${NC} $windDirection"
 if [ "$dayTime" == "true" ]; then
-	printf '\n\n\n\n'
+	printf '\n\n\n'
 else
-	printf '\n\n\n\n\n'	
+	printf '\n\n\n\n'	
 fi
 forecast_user_prompt
 }
 
+forecast_display_header () {
+if [ "$dayTime" == "true" ]; then
+	if [ "$showKeys" == "true" ]; then
+		echo -e -en "                               [${BLUE}F3${NC}] to hide controls"
+		else
+	printf '                               weatherapp live-view!'
+		tod="today"
+	fi
+else
+	if [ "$showKeys" == "true" ]; then
+		echo -e -en "                               [${BLUE}F3${NC}] to hide controls"
+		else
+	printf "                               weatherapp live-view"
+		tod="tonight"
+	fi
+fi
+}
+
 display_forecast_live () {
-sleep=$(pidof sleep)
-kill $sleep
-set_weather_info_fast
-clear
-#userForecast=$(get_forecast_link)
-#userHourlyForecast=$(get_hourly_forecast_link)
 userLoc=$(get_coords)
 timeStampTime=$(get_time_stamp_hour)
 timeStampDate=$(get_time_stamp_date)
-dayTime=$(get_daytime) 
-if [ "$dayTime" == "true" ]; then
-	printf '                               weatherapp live-view!'
-	tod="today"
-else
-	printf "                               weatherapp live-view"
-	tod="tonight"
+dayTime=$(get_daytime)
+clear
+currentTime=$(get_hour)
+currentTimeComparable=$(echo $currentTime | sed 's/://g')
+timeStampComparable=$(echo $timeStampTime | sed 's/://g')
+split=`expr $currentTimeComparable - $timeStampComparable`
+if [ $split -ge 12 ]; then
+set_weather_info_fast
 fi
+echo $split
+forecast_display_header
 time_of_day_gfx
 userCwa=$(grep '"cwa": ..' weatherappinfo.txt | sed 's/^...............//' | sed 's/,//g')
 userCity=$(grep '"city": ..' weatherappinfo.txt | sed 's/"//g' | sed 's/^....................//' | sed 's/.$//' | sed 's/: //' | tail -n1)
@@ -645,27 +688,33 @@ windSpeedInKmh="$windSpeed kmh"
 windDirection=$(get_winddirection)
 shortForecast=$(get_short_forecast)
 echo -e "Displaying hourly forecast data for ${BLUE}$timeStampDate${NC} at ${BLUE}$timeStampTime${NC}"
+#if [ "$showKeys" == "true" ]; then
 printf '\n\n'
+#fi
 if [ $temp -gt 85 ]; then
 	printf '\n'
-	echo -e "It's ${BLUE}$shortForecast${NC} outside $tod, with a current temperature of ${RED}$temp$degreesInF${NC}" | sed 's/"//g'
+	echo -e "${BLUE}$shortForecast${NC} $tod, with a current temperature of ${RED}$temp$degreesInF${NC}" | sed 's/"//g'
 elif [ $temp -gt 65 ] && [ $temp -lt 85 ]; then
 	printf '\n'
-	echo -e "It's ${BLUE}$shortForecast${NC} outside $tod, with a current temperature of ${YELLOW}$temp$degreesInF${NC}" | sed 's/"//g'
+	echo -e "${BLUE}$shortForecast${NC} $tod, with a current temperature of ${YELLOW}$temp$degreesInF${NC}" | sed 's/"//g'
 elif [ $temp -lt 65 ] && [ $temp -gt 55 ]; then
 	printf '\n'
-	echo -e "It's ${BLUE}$shortForecast${NC} outside $tod, with a current temperature of ${GREEN}$temp$degreesInF${NC}" | sed 's/"//g'
+	echo -e "${BLUE}$shortForecast${NC} $tod, with a current temperature of ${GREEN}$temp$degreesInF${NC}" | sed 's/"//g'
 else
 	printf '\n'
-	echo -e "It's ${BLUE}$shortForecast${NC} outside $tod, with a current temperature of ${BLUE}$temp$degreesInF${NC}" | sed 's/"//g'
+	echo -e "${BLUE}$shortForecast${NC} $tod, with a current temperature of ${BLUE}$temp$degreesInF${NC}" | sed 's/"//g'
 fi
 printf '\n'
 echo -e "Wind speed: ${BLUE}$windSpeedInMph${NC} $windDirection"
 if [ "$dayTime" != "true" ]; then
 	printf '\n'	
 fi
-printf '\n\n\n'
-forecast_user_prompt
+if [ "$showKeys" == "true" ]; then
+	display_controls
+else
+	printf '\n\n\n'
+	forecast_user_prompt
+fi
 }
 
 time_of_day_gfx () {
@@ -818,6 +867,7 @@ set_weather_info_fast () {
 
 currentForecastNumber=$(get_forecast_number)
 userInputValue=0
+showKeys="false"
 currentUser=$(check_user)
 clear
 if [ $currentUser -eq 1 ]; then
