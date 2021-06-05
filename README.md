@@ -8,7 +8,7 @@ coordinates to access current, local weather information, provided by the NWS AP
 ![weatherapp live-view](https://github.com/BenjaminVC/weatherapp/blob/main/wthapplive.png?raw=true)
 
 
-weatherapp also allows for viewing advanced forecast information. 
+weatherapp also allows for viewing <b>advanced forecast information</b>. 
 To view advanced forecasts, from the weatherapp live-view, simply use the arrow-keys to navigate by hour (arrow-key left/right) and/or day (arrow-key up/down).
 To view the weatherapp controls, from the main-menu select option #2.  
 
