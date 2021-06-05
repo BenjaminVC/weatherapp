@@ -10,7 +10,7 @@ coordinates to access current, local weather information, provided by the NWS AP
 
 weatherapp also allows for viewing <b>advanced forecast information</b>. 
 To view advanced forecasts, from the weatherapp live-view, simply use the arrow-keys to navigate by hour (arrow-key left/right) and/or day (arrow-key up/down).
-To view the weatherapp controls, from the main-menu select option #2.  
+To view the weatherapp controls, from the main-menu select option #2, or press F3 in live-view.   
 
 
 ![weatherapp advanced-forecast view](https://github.com/BenjaminVC/weatherapp/blob/main/wthappadv.png?raw=true)
