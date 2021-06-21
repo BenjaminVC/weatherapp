@@ -9,18 +9,29 @@ GREEN='\033[1;32m'
 NC='\033[0;00m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
-ARROWUP='\[A'
-ARROWDOWN='\[B'
-ARROWRIGHT='\[C'
-ARROWLEFT='\[D'
+ARROWUP='\e[A'
+ARROWDOWN='\e[B'
+ARROWRIGHT='\e[C'
+ARROWLEFT='\e[D'
 #main-menu
-F1='\OP'
+#^[OP
+F1='\eOP'
+#F1ESCAPE2='P\O'
+#F1ESCAPE3='OP\'
+#F1ESCAPE4
 #show/hide controls
-F3='\OR'
+#^[OR
+F3='\eOR'
 #refresh
-F5='\15'
+#^[[15~
+F5='\e[15~'
+#F5ESCAPE2='5~\'
+#F5ESCAPE3='[15'
+#F5ESCAPE4='~\['
+
 #exit
-F12='\24'
+#^[[24~
+F12='\e[24~'
 EXITTRUE=0
 EXITFALSE=1
 
@@ -36,6 +47,14 @@ else
 fi	
 }
 
+ReadKey() {
+  if read -sN1 -p "[F1] to go main-menu, [F12] to quit, or [F3] to toggle help on/off" KEY; then
+    while read -sN1 -t 0.001 ; do
+      KEY+="${REPLY}"
+    done
+  fi
+}
+
 get_temp () {
 number=$(get_forecast_number)
 local temp=$(grep -m${number} '"temperature": ..' weatherappinfohourlyforecast.txt | sed 's/^...............................//' | cut -c1-2 | tail -n1)
@@ -47,7 +66,7 @@ USERPREFS=/home/ben/weatherappprefs.txt
 if [ -f "$USERPREFS" ]; then
 	echo "OVERWRITE existing preferences?"
 	printf '\n'
-	read -p "[y/n] " userChoice
+	read -n3 -p "[y/n] " userChoice
 	if [ "$userChoice" == "y" ]; then
 		rm -i -v weatherappprefs.txt
 		main_menu
@@ -60,7 +79,7 @@ echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 ste
 	printf '\n\n\n\n\n\n'
 	echo "Welcome to the weatherapp initial user setup."
 	printf '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'
-	read -p "press enter to continue..."
+	read -n3 -p "press enter to continue..."
 	clear
 	echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [1/4]"
 	printf '\n\n\n'
@@ -68,7 +87,7 @@ echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 ste
 	echo "accurate weather information, provided by the NWS."
 	printf '\n\n\n\n\n\n\n\n\n'
 	echo "enter 'y' to allow weatherapp to use location information" 
-	read -p "[y/n] " allowLocation
+	read -n3 -p "[y/n] " allowLocation
 	printf '\n\n'
 	
 	if [ "$allowLocation" == "y" ]; then
@@ -76,7 +95,7 @@ echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 ste
 		userAllowGeoLocation="geoLocationPermissions = 1" 
 		echo "$userAllowGeoLocation" >> $USERPREFS
 		printf '\n\n\n'
-		read -p "press enter to continue..."
+		read -n3 -p "press enter to continue..."
 		clear
 	else
 		userAllowGeoLocation="geoLocationPermissions = 0" 
@@ -84,13 +103,13 @@ echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 ste
 		# force weatherapp to ask for longitude and latitude in this case
 		echo -e "Location permissions ${RED}denied${NC}"
 		printf '\n\n\n'
-		read -p "press enter to continue..."
+		read -n3 -p "press enter to continue..."
 		clear
 	fi
 	echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [2/4]"
 	printf '\n\n'
 	echo "Enable weatherapp to change terminal colors and themes based on time of day?" 
-	read -p "[y/n] " allowTheme
+	read -n3 -p "[y/n] " allowTheme
 	if [ "$allowTheme" == "y" ]; then
 		userAllowTheme="allowTheme = 1" 
 		echo "$userAllowTheme" >> $USERPREFS
@@ -98,7 +117,7 @@ echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 ste
 		printf '\n\n\n\n\n\n\n\n\n'
 		
 		
-		read -p "press enter to continue..."
+		read -n3 -p "press enter to continue..."
 		
 		clear
 	else
@@ -107,27 +126,27 @@ echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 ste
 		echo -e "Colors and themes ${RED}disabled${NC}"
 		
 		printf '\n\n\n'
-		read -p "press enter to continue..."
+		read -n3 -p "press enter to continue..."
 		clear
 	fi
 	echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [3/4]"
 	printf '\n\n'
 	echo "Enable quickrun so that when weatherapp starts, it will immediately display the current forecast?" 
 	printf '\n\n'
-	read -p "[y/n] " allowQuickrun
+	read -n3 -p "[y/n] " allowQuickrun
 	if [ "$allowQuickrun" == "y" ]; then 
 		userQuickRun="allowQuickRun = 1" 
 		echo "$userQuickRun" >> $USERPREFS
 		echo -e "quickrun ${GREEN}enabled${NC}" 
 		printf '\n\n\n\n\n\n\n'
-		read -p "press enter to continue..."
+		read -n3 -p "press enter to continue..."
 		clear
 	else
 		userQuickRun="allowQuickRun = 0" 
 		echo "$userQuickRun" >> $USERPREFS
 		echo -e "quickrun ${RED}disabled${NC}"
 		printf '\n\n\n'
-		read -p "press enter to continue..."
+		read -n3 -p "press enter to continue..."
 		clear
 	fi
 	echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [4/4]"
@@ -136,14 +155,14 @@ echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 ste
 	echo "The default unit of measurement for temperature is set to $userDegrees, do you want to save these changes?"
 	printf '\n\n'
 	echo "Enter 'y' to save changes or 'n' to switch to Celcius"
-	read -p "[y/n] " allowFarenheit
+	read -n3 -p "[y/n] " allowFarenheit
 	if [ "$allowFarenheit" == "y" ]; then
 		userAllowFarenheit="farenheit = 1" 
 		echo "$userAllowFarenheit" >> $USERPREFS
 		echo -e "Farenheit ${GREEN}enabled${NC}" 
 		echo "step [4/4] "
 		printf '\n\n\n\n\n\n\n\n\n\n'
-		read -p "press enter to continue..."
+		read -n3 -p "press enter to continue..."
 		clear
 	else
 		userAllowFarenheit="farenheit = 0" 
@@ -151,11 +170,11 @@ echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 ste
 		echo -e "Farenheit ${RED}disabled${NC}" 
 		echo "step [4/4] "
 		printf '\n\n\n'
-		read -p "press enter to continue..."
+		read -n3 -p "press enter to continue..."
 		clear
 	echo "Initial setup complete!"
 	printf '\n\n\n\n'
-	read -p "press enter to return to the MAIN-MENU"
+	read -n3 -p "press enter to return to the MAIN-MENU"
 	fi
 fi
 main_menu
@@ -164,8 +183,8 @@ main_menu
 #TODO: grep USERPREFS file to view and change initialized settings in terminal window 
 main_menu() {
 #unset $mainMentuOption
-sleep=$(pidof sleep)
-kill $sleep
+#sleep=$(pidof sleep)
+#kill $sleep
 clear
 echo -e "			${BLUE}       weatherapp MAIN-MENU${NC}"
 printf '\n\n'
@@ -176,7 +195,7 @@ echo "3. About"
 echo "4. User configuration file"
 echo -e "5. ${BLUE}weatherapp live-view${NC}"
 printf '\n\n\n'
-read -p "Enter the corresponding number to select from the given menu options:  " mainMenuOption
+read -n3 -p "Enter the corresponding number to select from the given menu options:  " mainMenuOption
 case $mainMenuOption in
 1)
 	printf '\n\n\n\n\n\n\n\n'
@@ -200,7 +219,7 @@ case $mainMenuOption in
 	printf '\n'
 	echo -e "'${BLUE}Enter${NC}'       : Update and display live-forecast view"
 	printf '\n\n\n\n\n\n\n'
-	read -p "press 'enter' to return to main-menu"
+	read -n3 -p "press 'enter' to return to main-menu"
 			main_menu
 	;;
 3)
@@ -215,7 +234,7 @@ case $mainMenuOption in
 	echo "To view advanced forecasts, from the weatherapp live-view, "
 	echo "simply use the arrow-keys to navigate by hour and/or day."
 	printf '\n\n\n\n\n\n\n\n\n'
-	read -p "press enter to return to main-menu"
+	read -n3 -p "press enter to return to main-menu"
 			main_menu
 	;;
 4)
@@ -225,7 +244,7 @@ case $mainMenuOption in
 	if [ -f weatherappprefs.txt ]; then
 		echo "Would you like to remove current user-configuration file?"
 		printf '\n\n\n\n'
-		read -p "[y/n] " userConfigChoice
+		read -n3 -p "[y/n] " userConfigChoice
 		if [ "$userConfigChoice" == "y" ]; then 
 			clear
 			echo "Are you sure? weatherapp will need to be reconfigured after removing the current user-configuration file."
@@ -237,7 +256,7 @@ case $mainMenuOption in
 			main_menu
 		else
 			printf '\n\n\n\n\n'
-			read -p "user confifuration file was not removed, press enter to return to MAIN-MENU"
+			read -n3 -p "user confifuration file was not removed, press enter to return to MAIN-MENU"
 			main_menu
 		fi
 	else 
@@ -253,24 +272,23 @@ case $mainMenuOption in
 	display_forecast_live
 	;;
 *)	
-	sleep=$(pidof sleep)
-	kill $sleep
-	#display_forecast_live
+	display_forecast_live
 	;;
 esac
 }
 		
-check_status () {		
+check_status () {
 FILE=/home/ben/weatherappinfo.txt
 lastUpdated=$(get_time_stamp_date | sed 's/^.....//' | sed 's/-//g')
 currentDate=$(get_date | sed 's/^.....//' | sed 's/-//g')
 userAuth=$(check_user)
 if [ $userAuth ]; then 
+	
 	clear
-	echo -e "${BLUE}$FILE${NC} found, loading forecast info..."
+	echo -e "${BLUE}$FILE${NC} found, downloading forecast information..."
 	sleep 2
 	set_weather_info_fast
-	display_forecast_live
+	
 else
 s	"$FILE does not exist, fetching info from weather.gov"
 	set_weather_info 
@@ -280,7 +298,7 @@ fi
 display_controls () {
 printf '\n\n'
 
-	echo -e "[${BLUE}Up-arrow${NC}]   [${BLUE}Down-arrow${NC}]   [${BLUE}Right-arrow${NC}]   [${BLUE}Left-arrow${NC}]        [${BLUE}Enter${NC}]${NC}"   
+	echo -e "[${BLUE}Up-arrow${NC}]   [${BLUE}Down-arrow${NC}]   [${BLUE}Right-arrow${NC}]   [${BLUE}Left-arrow${NC}]          [${BLUE}F5${NC}]"   
 	echo -en "  +1 day        -1 day          +1 hour        -1 hour     refresh live-view"
 read -s -r -n3 uI
 if [ $(echo -n "$uI" | grep "$F3") ]; then
@@ -289,61 +307,132 @@ fi
 display_forecast_live
 }
 
+refresh_live_view () {
+if [ $f5Press -eq 1 ]; then
+	local arg1=1
+	echo $arg1
+	set_weather_info_fast
+else
+	local arg1=0
+	echo $arg1
+fi
+}
+
 #TODO: Because user_prompt does not get successful exit code... inf loop...? 
 # ...or make separate function to sleep and check for outdated info, restarts weatherapp if true
 forecast_user_prompt () { 
-read -t900 -n3 -p "[F1] to go main-menu, [F12] to quit, or [F3] to toggle help on/off" userChoice
-	case $userChoice in 
-	q)
-	#$(echo -n "$userChoice" | grep "$F12"))
-		echo -e "${GREEN}exit 0${NC}\n\n\n"
-		exit 0
-		;;	
-	$(echo -n "$userChoice" | grep "$F5"))
-		display_forecast_live
-		;;
-	$(echo -n "$userChoice" | grep "$F1"))
-		main_menu
-		;;
-	$(echo -n "$userChoice" | grep "$F3"))
-		
-		#display_controls
-		showKeys="true"
-		display_forecast_live
-		;;
-	$(echo -n "$userChoice" | grep "$ARROWLEFT"))
-		sleep=$(pidof sleep)
-		kill $sleep
-		currentForecastNumber=$((currentForecastNumber-1))
-		userInputValue=$((userInputValue-1))
-		display_advance_forecast
-		;;
-	$(echo -n "$userChoice" | grep "$ARROWRIGHT"))
-		
-		currentForecastNumber=$((currentForecastNumber+1))
-		userInputValue=$((userInputValue+1))
-		display_advance_forecast
-		;;
-	$(echo -n "$userChoice" | grep "$ARROWUP"))
-		
-		currentForecastNumber=$((currentForecastNumber+24))
+DEBUG=/home/ben/weatherappdebug.txt
+
+#if read -sN1 -p "[F1] to go main-menu, [F12] to quit, or [F3] to toggle help on/off" userChoice; then
+#	while read -sN1 -t 0.001 ; do
+#		userChoice+="${REPLY}"
+#	done
+#fi
+while ReadKey; do
+  case "${KEY}" in
+    $'\eOP')    main_menu;;
+    $'\eOR')    display_controls;;
+    $'\e[24~') exit 0;;
+    $'\e[15~') refresh_live_view;;
+    $'\e[A') currentForecastNumber=$((currentForecastNumber+24))
 		userInputValue=$((userInputValue+24))
-		display_advance_forecast
-		;;
-	$(echo -n "$userChoice" | grep "$ARROWDOWN"))
-		
-		currentForecastNumber=$((currentForecastNumber-24))
+		display_advance_forecast;;
+    $'\e[B') currentForecastNumber=$((currentForecastNumber-24))
 		userInputValue=$((userInputValue-24))
-		display_advance_forecast
-		;;
-	*)
-		
-		display_forecast_live
-		;;
-	esac
+		display_advance_forecast;;
+    $'\e[C') currentForecastNumber=$((currentForecastNumber+1))
+		userInputValue=$((userInputValue+1))
+		display_advance_forecast;;
+    $'\e[D') currentForecastNumber=$((currentForecastNumber-1))
+		userInputValue=$((userInputValue-1))
+		display_advance_forecast;;
+    *) display_forecast_live;;
+  esac
+done
 }
 
+#user_prompt_choice () {
+
+
+
+
+#while forecast_user_prompt; do
+
+#	echo "$userChoice" >> $DEBUG
+#	case "${userChoice}" in 
+#	$(echo -n "$userChoice" | grep "$F12"))
+
+#		echo -e "${GREEN}exit 0${NC}\n\n\n"
+#		exit 0
+#		;;	
+#	$(echo -n "$userChoice" | grep "$F5ESCAPE1"))
+
+#		f5Press=1
+#		refresh_live_view 
+#		;;
+	#$(echo -n "$userChoice" | grep "$F5ESCAPE2"))
+
+	#	f5Press=1
+	#	refresh_live_view 
+	#	;;
+	#$(echo -n "$userChoice" | grep "$F5ESCAPE3"))
+
+	#	f5Press=1
+	#	refresh_live_view 
+	#	;;
+	#$(echo -n "$userChoice" | grep "$F5ESCAPE4"))
+
+	#	f5Press=1
+	#	refresh_live_view 
+	#	;;
+#	$(echo -n "$userChoice" | grep "$F1ESCAPE1"))
+
+#		main_menu
+#		;;
+	#$(echo -n "$userChoice" | grep "$F1ESCAPE2"))
+
+	#	main_menu
+	#	;;
+#	$(echo -n "$userChoice" | grep "$F3"))
+
+		#display_controls
+#		showKeys="true"
+#		display_forecast_live
+#		;;
+#	$(echo -n "$userChoice" | grep "$ARROWLEFT"))
+
+#		currentForecastNumber=$((currentForecastNumber-1))
+#		userInputValue=$((userInputValue-1))
+#		display_advance_forecast
+#		;;
+#	$(echo -n "$userChoice" | grep "$ARROWRIGHT"))
+
+#		currentForecastNumber=$((currentForecastNumber+1))
+#		userInputValue=$((userInputValue+1))
+#		display_advance_forecast
+#		;;
+#	$(echo -n "$userChoice" | grep "$ARROWUP"))
+
+#		currentForecastNumber=$((currentForecastNumber+24))
+#		userInputValue=$((userInputValue+24))
+#		display_advance_forecast
+#		;;
+#	$(echo -n "$userChoice" | grep "$ARROWDOWN"))
+
+#		currentForecastNumber=$((currentForecastNumber-24))
+#		userInputValue=$((userInputValue-24))
+#		display_advance_forecast
+#		;;
+#	*)
+
+#		display_forecast_live
+#		;;
+#	esac
+#done
+#}
+
 get_forecast_number () {
+
 i=1
 j=$i
 tempNotFound=1
@@ -668,7 +757,6 @@ split=`expr $currentTimeComparable - $timeStampComparable`
 if [ $split -ge 12 ]; then
 set_weather_info_fast
 fi
-echo $split
 forecast_display_header
 time_of_day_gfx
 userCwa=$(grep '"cwa": ..' weatherappinfo.txt | sed 's/^...............//' | sed 's/,//g')
@@ -807,7 +895,7 @@ echo $coords
 }
 
 set_location_link () {
-curl -s --user-agent "$USERAGENT" https://api.weather.gov/points/$(get_coords) -o weatherappinfo.txt
+curl -s -H "$USERAGENT" https://api.weather.gov/points/$(get_coords) -o weatherappinfo.txt
 }
 
 get_location_link () { 
@@ -822,7 +910,7 @@ echo $retval
 }
 
 set_forecast_link () { 
-curl -s --user-agent "$USERAGENT" $(get_forecast_link) -o weatherappinfoforecast.txt
+curl -s -H "$USERAGENT" $(get_forecast_link) -o weatherappinfoforecast.txt
 }
 
 #returns string value of last set coordinates
@@ -837,17 +925,23 @@ echo $retval
 }
 
 update_hourly_forecast () { 
-curl -s --user-agent "$USERAGENT" $(get_hourly_forecast_link) -o weatherappinfohourlyforecast.txt
+curl -s -H "$USERAGENT" $(get_hourly_forecast_link) -o weatherappinfohourlyforecast.txt
+errorCheck=$(grep -c '"Unexpected"' weatherappinfohourlyforecast.txt)
+if [ $errorCheck -eq 1 ]; then 
+	clear
+	echo -e "weatherapp has encountered an ${RED}unexpected error${NC} and needs to run initial setup."
+	sleep 2
+	initial_setup
+fi
 }
 
 set_weather_info () {
 echo "Allow weatherapp to use location information? "
-read -p "[y/n] " userChoice
+read -n3 -p "[y/n] " userChoice
 	if [ "$userChoice" == "y" ]; then
 		clear
 		set_coords
 		set_location_link
-		set_forecast_link keeps popping up in terminal
 		update_hourly_forecast
 		set_time_stamp_date
 		set_time_stamp_hour
@@ -859,27 +953,37 @@ read -p "[y/n] " userChoice
 
 # writes new timestamp and updates weather info, bypasses permissions
 set_weather_info_fast () {
-		clear
+refreshValue=$(refresh_live_view)
 		update_hourly_forecast
 		set_time_stamp_date
 		set_time_stamp_hour
+		clear
+if [ $refreshValue -eq 1 ]; then
+		refreshValue=0
+		display_forecast_live
+fi	
 }
 
-currentForecastNumber=$(get_forecast_number)
+f5Press=0
+pid=$(echo $$)
 userInputValue=0
 showKeys="false"
 currentUser=$(check_user)
 clear
 if [ $currentUser -eq 1 ]; then
- 	check_status		
+ 	check_status
+ 	currentForecastNumber=$(get_forecast_number)
+ 	display_forecast_live		
 else
 	printf '\n\n\n\n'
 	echo "                    Welcome to weatherapp, let's get started."
 	printf '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'
 	echo -e "press ${BLUE}enter${NC} to continue..."
+	#read -n3 -p
 	read -p 
 	clear
 	initial_setup
 fi
 echo -e "${GREEN}exit 0${NC}\n\n\n"
+#kill $pid
 exit 0
