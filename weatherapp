@@ -1,7 +1,5 @@
 #!/usr/bin/env bash 
 
-# TODO: set/get directory_name function for writing files to
-
 # constants
 USERAGENT="weatherapp for linux terminal, benvancise@gmail.com"
 RED='\033[0;31m'
@@ -13,24 +11,9 @@ ARROWUP='\e[A'
 ARROWDOWN='\e[B'
 ARROWRIGHT='\e[C'
 ARROWLEFT='\e[D'
-#main-menu
-#^[OP
 F1='\eOP'
-#F1ESCAPE2='P\O'
-#F1ESCAPE3='OP\'
-#F1ESCAPE4
-#show/hide controls
-#^[OR
 F3='\eOR'
-#refresh
-#^[[15~
 F5='\e[15~'
-#F5ESCAPE2='5~\'
-#F5ESCAPE3='[15'
-#F5ESCAPE4='~\['
-
-#exit
-#^[[24~
 F12='\e[24~'
 EXITTRUE=0
 EXITFALSE=1
@@ -182,9 +165,6 @@ main_menu
 
 #TODO: grep USERPREFS file to view and change initialized settings in terminal window 
 main_menu() {
-#unset $mainMentuOption
-#sleep=$(pidof sleep)
-#kill $sleep
 clear
 echo -e "			${BLUE}       weatherapp MAIN-MENU${NC}"
 printf '\n\n'
@@ -318,121 +298,42 @@ else
 fi
 }
 
-#TODO: Because user_prompt does not get successful exit code... inf loop...? 
-# ...or make separate function to sleep and check for outdated info, restarts weatherapp if true
 forecast_user_prompt () { 
 DEBUG=/home/ben/weatherappdebug.txt
 
-#if read -sN1 -p "[F1] to go main-menu, [F12] to quit, or [F3] to toggle help on/off" userChoice; then
-#	while read -sN1 -t 0.001 ; do
-#		userChoice+="${REPLY}"
-#	done
-#fi
 while ReadKey; do
   case "${KEY}" in
-    $'\eOP')    main_menu;;
-    $'\eOR')    display_controls;;
-    $'\e[24~') exit 0;;
-    $'\e[15~') refresh_live_view;;
-    $'\e[A') currentForecastNumber=$((currentForecastNumber+24))
-		userInputValue=$((userInputValue+24))
-		display_advance_forecast;;
-    $'\e[B') currentForecastNumber=$((currentForecastNumber-24))
-		userInputValue=$((userInputValue-24))
-		display_advance_forecast;;
-    $'\e[C') currentForecastNumber=$((currentForecastNumber+1))
-		userInputValue=$((userInputValue+1))
-		display_advance_forecast;;
-    $'\e[D') currentForecastNumber=$((currentForecastNumber-1))
-		userInputValue=$((userInputValue-1))
-		display_advance_forecast;;
-    *) display_forecast_live;;
+    $'\eOP')   
+     main_menu;;
+    $'\eOR')
+     display_controls;;
+    $'\e[24~') 
+    exit 0;;
+    $'\e[15~') 
+    refresh_live_view;;
+    $'\e[A') 
+    	currentForecastNumber=$((currentForecastNumber+24))
+	userInputValue=$((userInputValue+24))
+	display_advance_forecast;;
+    $'\e[B') 
+    	currentForecastNumber=$((currentForecastNumber-24))
+	userInputValue=$((userInputValue-24))
+	display_advance_forecast;;
+    $'\e[C') 
+    	currentForecastNumber=$((currentForecastNumber+1))
+	userInputValue=$((userInputValue+1))
+	display_advance_forecast;;
+    $'\e[D') 
+    	currentForecastNumber=$((currentForecastNumber-1))
+	userInputValue=$((userInputValue-1))
+	display_advance_forecast;;
+    *) 
+    	display_forecast_live;;
   esac
 done
 }
 
-#user_prompt_choice () {
-
-
-
-
-#while forecast_user_prompt; do
-
-#	echo "$userChoice" >> $DEBUG
-#	case "${userChoice}" in 
-#	$(echo -n "$userChoice" | grep "$F12"))
-
-#		echo -e "${GREEN}exit 0${NC}\n\n\n"
-#		exit 0
-#		;;	
-#	$(echo -n "$userChoice" | grep "$F5ESCAPE1"))
-
-#		f5Press=1
-#		refresh_live_view 
-#		;;
-	#$(echo -n "$userChoice" | grep "$F5ESCAPE2"))
-
-	#	f5Press=1
-	#	refresh_live_view 
-	#	;;
-	#$(echo -n "$userChoice" | grep "$F5ESCAPE3"))
-
-	#	f5Press=1
-	#	refresh_live_view 
-	#	;;
-	#$(echo -n "$userChoice" | grep "$F5ESCAPE4"))
-
-	#	f5Press=1
-	#	refresh_live_view 
-	#	;;
-#	$(echo -n "$userChoice" | grep "$F1ESCAPE1"))
-
-#		main_menu
-#		;;
-	#$(echo -n "$userChoice" | grep "$F1ESCAPE2"))
-
-	#	main_menu
-	#	;;
-#	$(echo -n "$userChoice" | grep "$F3"))
-
-		#display_controls
-#		showKeys="true"
-#		display_forecast_live
-#		;;
-#	$(echo -n "$userChoice" | grep "$ARROWLEFT"))
-
-#		currentForecastNumber=$((currentForecastNumber-1))
-#		userInputValue=$((userInputValue-1))
-#		display_advance_forecast
-#		;;
-#	$(echo -n "$userChoice" | grep "$ARROWRIGHT"))
-
-#		currentForecastNumber=$((currentForecastNumber+1))
-#		userInputValue=$((userInputValue+1))
-#		display_advance_forecast
-#		;;
-#	$(echo -n "$userChoice" | grep "$ARROWUP"))
-
-#		currentForecastNumber=$((currentForecastNumber+24))
-#		userInputValue=$((userInputValue+24))
-#		display_advance_forecast
-#		;;
-#	$(echo -n "$userChoice" | grep "$ARROWDOWN"))
-
-#		currentForecastNumber=$((currentForecastNumber-24))
-#		userInputValue=$((userInputValue-24))
-#		display_advance_forecast
-#		;;
-#	*)
-
-#		display_forecast_live
-#		;;
-#	esac
-#done
-#}
-
 get_forecast_number () {
-
 i=1
 j=$i
 tempNotFound=1
@@ -776,9 +677,6 @@ windSpeedInKmh="$windSpeed kmh"
 windDirection=$(get_winddirection)
 shortForecast=$(get_short_forecast)
 echo -e "Displaying hourly forecast data for ${BLUE}$timeStampDate${NC} at ${BLUE}$timeStampTime${NC}"
-#if [ "$showKeys" == "true" ]; then
-printf '\n\n'
-#fi
 if [ $temp -gt 85 ]; then
 	printf '\n'
 	echo -e "${BLUE}$shortForecast${NC} $tod, with a current temperature of ${RED}$temp$degreesInF${NC}" | sed 's/"//g'
@@ -979,11 +877,9 @@ else
 	echo "                    Welcome to weatherapp, let's get started."
 	printf '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'
 	echo -e "press ${BLUE}enter${NC} to continue..."
-	#read -n3 -p
 	read -p 
 	clear
 	initial_setup
 fi
 echo -e "${GREEN}exit 0${NC}\n\n\n"
-#kill $pid
 exit 0
