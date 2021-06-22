@@ -292,6 +292,7 @@ if [ $f5Press -eq 1 ]; then
 	local arg1=1
 	echo $arg1
 	set_weather_info_fast
+	
 else
 	local arg1=0
 	echo $arg1
@@ -299,6 +300,7 @@ fi
 }
 
 forecast_user_prompt () { 
+
 DEBUG=/home/ben/weatherappdebug.txt
 
 while ReadKey; do
@@ -310,7 +312,8 @@ while ReadKey; do
     $'\e[24~') 
     exit 0;;
     $'\e[15~') 
-    refresh_live_view;;
+    f5Press=1
+    set_weather_info_fast;;
     $'\e[A') 
     	currentForecastNumber=$((currentForecastNumber+24))
 	userInputValue=$((userInputValue+24))
@@ -698,7 +701,7 @@ fi
 if [ "$showKeys" == "true" ]; then
 	display_controls
 else
-	printf '\n\n\n'
+	printf '\n\n\n\n\n'
 	forecast_user_prompt
 fi
 }
@@ -851,13 +854,13 @@ read -n3 -p "[y/n] " userChoice
 
 # writes new timestamp and updates weather info, bypasses permissions
 set_weather_info_fast () {
-refreshValue=$(refresh_live_view)
+#refreshValue=$(refresh_live_view)
 		update_hourly_forecast
 		set_time_stamp_date
 		set_time_stamp_hour
 		clear
-if [ $refreshValue -eq 1 ]; then
-		refreshValue=0
+if [ $f5Press -eq 1 ]; then
+		f5Press=0
 		display_forecast_live
 fi	
 }
