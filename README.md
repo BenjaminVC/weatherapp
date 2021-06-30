@@ -9,6 +9,7 @@ A light-weight, live weather application for the linux terminal.
 
 weatherapp also allows for viewing <b>advanced forecast information</b>. 
 To view advanced forecasts, from the weatherapp live-view, simply use the arrow-keys to navigate by hour (arrow-key left/right) and/or day (arrow-key up/down).
+A system beep will indicate the beginning or end of the available advanced-forecast view.
 To view the weatherapp controls, from the main-menu select option #2, or press F3 in live-view.   
 
 
