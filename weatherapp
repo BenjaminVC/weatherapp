@@ -20,7 +20,7 @@ EXITFALSE=1
 
 # Checks if a user configuration file has been created, returns 1 if found
 check_user () {
-USER=/home/ben/weatherappprefs.txt
+USER=$workingDirectory/weatherappprefs.txt
 local retval=0
 if [ -f $USER ]; then 
 	retval=1
@@ -31,9 +31,11 @@ fi
 }
 
 ReadKey() {
+
   if read -sN1 -p "[F1] to go main-menu, [F12] to quit, or [F3] to toggle help on/off" KEY; then
     while read -sN1 -t 0.001 ; do
-      KEY+="${REPLY}"
+      KEY+="${REPLY}" 
+     
     done
   fi
 }
@@ -45,7 +47,7 @@ echo $temp
 }
 
 initial_setup () {
-USERPREFS=/home/ben/weatherappprefs.txt
+USERPREFS=$workingDirectory/weatherappprefs.txt
 if [ -f "$USERPREFS" ]; then
 	echo "OVERWRITE existing preferences?"
 	printf '\n'
@@ -258,7 +260,7 @@ esac
 }
 		
 check_status () {
-FILE=/home/ben/weatherappinfo.txt
+FILE="$workingDirectory/weatherappinfo.txt"
 lastUpdated=$(get_time_stamp_date | sed 's/^.....//' | sed 's/-//g')
 currentDate=$(get_date | sed 's/^.....//' | sed 's/-//g')
 userAuth=$(check_user)
@@ -287,7 +289,7 @@ fi
 display_forecast_live
 }
 
-refresh_live_view () {
+user_refresh_live_view () {
 if [ $f5Press -eq 1 ]; then
 	local arg1=1
 	echo $arg1
@@ -299,11 +301,16 @@ else
 fi
 }
 
+refresh_live_view () {
+	set_weather_info_fast
+	display_forecast_live
+}
+
 forecast_user_prompt () { 
 
-DEBUG=/home/ben/weatherappdebug.txt
+DEBUG=$workingDirectory/weatherappdebug.txt
 
-while ReadKey; do
+while ReadKey ; do
   case "${KEY}" in
     $'\eOP')   
      main_menu;;
@@ -611,11 +618,11 @@ shortForecast=$(custom_short_forecast)
 printf '\n\n'
 echo -e "Short forecast: ${BLUE}$shortForecast${NC} outside"
 printf '\n'
-if [ $temp -gt 85 ]; then
+if [ $temp -ge 85 ]; then
 	echo -e "Forecasted temperature: ${RED}$temp$degreesInF${NC}" | sed 's/"//g'
 elif [ $temp -gt 65 ] && [ $temp -lt 85 ]; then
 	echo -e "Forecasted temperature: ${YELLOW}$temp$degreesInF${NC}" | sed 's/"//g'
-elif [ $temp -lt 65 ] && [ $temp -gt 55 ]; then
+elif [ $temp -le 65 ] && [ $temp -gt 55 ]; then
 	echo -e "Forecasted temperature: ${GREEN}$temp$degreesInF${NC}" | sed 's/"//g'
 else
 	echo -e "Forecasted temperature: ${BLUE}$temp$degreesInF${NC}" | sed 's/"//g'
@@ -654,13 +661,7 @@ timeStampTime=$(get_time_stamp_hour)
 timeStampDate=$(get_time_stamp_date)
 dayTime=$(get_daytime)
 clear
-currentTime=$(get_hour)
-currentTimeComparable=$(echo $currentTime | sed 's/://g')
-timeStampComparable=$(echo $timeStampTime | sed 's/://g')
-split=`expr $currentTimeComparable - $timeStampComparable`
-if [ $split -ge 12 ]; then
-set_weather_info_fast
-fi
+
 forecast_display_header
 time_of_day_gfx
 userCwa=$(grep '"cwa": ..' weatherappinfo.txt | sed 's/^...............//' | sed 's/,//g')
@@ -703,6 +704,7 @@ if [ "$showKeys" == "true" ]; then
 else
 	printf '\n\n\n\n\n'
 	forecast_user_prompt
+	# 
 fi
 }
 
@@ -758,7 +760,7 @@ echo $currentHour
 
 set_time_stamp_date () {
 timeStampDate=$(get_date)
-DATEFILE=/home/ben/weatherapptimestampdate.txt 
+DATEFILE=$workingDirectory/weatherapptimestampdate.txt
 echo "$timeStampDate" > $DATEFILE
 local retval=$(<$DATEFILE)
 echo "$retval"
@@ -766,27 +768,27 @@ echo "$retval"
 
 set_time_stamp_hour () {
 timeStampHour=$(get_hour)
-HOURFILE=/home/ben/weatherapptimestamphour.txt 
+HOURFILE=$workingDirectory/weatherapptimestamphour.txt
 echo "$timeStampHour" > $HOURFILE
 local retval=$(<$HOURFILE)
 echo "$retval"
 }
 
 get_time_stamp_date () {
-DATEFILE=/home/ben/weatherapptimestampdate.txt 
+DATEFILE=$workingDirectory/weatherapptimestampdate.txt
 local retval=$(<$DATEFILE)
 echo "$retval"
 }
 
 get_time_stamp_hour () {
-HOURFILE=/home/ben/weatherapptimestamphour.txt 
+HOURFILE=$workingDirectory/weatherapptimestamphour.txt
 local retval=$(<$HOURFILE)
 echo "$retval"
 }
 
 set_coords () { 
 local userCoords=$(curl -s ipinfo.io | grep '"loc": ' | sed 's/"//g' | sed 's/loc//g' | sed 's/.$//' | sed 's/: //' | sed -r 's/\s+//g')
-COORDSFILE=/home/ben/weatherappcoords.txt
+COORDSFILE=$workingDirectory/weatherappcoords.txt
 echo "coords = $userCoords" > $COORDSFILE
 }
 
@@ -854,7 +856,6 @@ read -n3 -p "[y/n] " userChoice
 
 # writes new timestamp and updates weather info, bypasses permissions
 set_weather_info_fast () {
-#refreshValue=$(refresh_live_view)
 		update_hourly_forecast
 		set_time_stamp_date
 		set_time_stamp_hour
@@ -865,16 +866,13 @@ if [ $f5Press -eq 1 ]; then
 fi	
 }
 
-f5Press=0
-pid=$(echo $$)
-userInputValue=0
-showKeys="false"
-currentUser=$(check_user)
-clear
+
+app_start () {
 if [ $currentUser -eq 1 ]; then
- 	check_status
+ 	check_status 
  	currentForecastNumber=$(get_forecast_number)
- 	display_forecast_live		
+ 	
+ 	display_forecast_live 		
 else
 	printf '\n\n\n\n'
 	echo "                    Welcome to weatherapp, let's get started."
@@ -884,5 +882,20 @@ else
 	clear
 	initial_setup
 fi
+}
+
+workingDirectory=$(pwd)
+pidFile=weatherappid
+scriptLocation=weatherapp
+currentTime=$(get_hour)
+f5Press=0
+pid=$(echo $$)
+echo $pid > $pidFile
+userInputValue=0
+showKeys="false"
+currentUser=$(check_user)
+clear
+app_start
+
 echo -e "${GREEN}exit 0${NC}\n\n\n"
 exit 0
