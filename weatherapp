@@ -80,6 +80,11 @@ echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 ste
 		userAllowGeoLocation="geoLocationPermissions = 1" 
 		echo "$userAllowGeoLocation" >> $USERPREFS
 		printf '\n\n\n'
+		set_coords
+		set_location_link
+		update_hourly_forecast
+		set_time_stamp_date
+		set_time_stamp_hour
 		read -n3 -p "press enter to continue..."
 		clear
 	else
