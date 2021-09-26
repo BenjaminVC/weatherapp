@@ -59,14 +59,24 @@ if [ -f "$USERPREFS" ]; then
 		echo "user configuration not changed"
 	fi
 else
-echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [1/4]"
+echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [1/5]"
 
 	printf '\n\n\n\n\n\n'
 	echo "Welcome to the weatherapp initial user setup."
-	printf '\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'
+	printf '\n\n\n\n\n\n\n\n\n\n\n\n\n'
+curl http://google.com &> /dev/null
+status=$?
+if [ $status -eq 0 ] ; then 
+	printf '\n\n'
 	read -n3 -p "press enter to continue..."
 	clear
-	echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [1/4]"
+else
+	echo -en "\007"
+	echo -e "${RED}ERROR${NC}: weatherapp requires curl be installed in order to access local forecast data.  Please install curl before running weatherapp."
+	exit 0
+fi
+	
+	echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [2/5]"
 	printf '\n\n\n'
 	echo "weatherapp uses latitudinal and longitudinal geographic coordinates to access"
 	echo "accurate weather information, provided by the NWS."
@@ -96,7 +106,7 @@ echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 ste
 		read -n3 -p "press enter to continue..."
 		clear
 	fi
-	echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [2/4]"
+	echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [3/5]"
 	printf '\n\n'
 	echo "Enable weatherapp to change terminal colors and themes based on time of day?" 
 	read -n3 -p "[y/n] " allowTheme
@@ -119,7 +129,7 @@ echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 ste
 		read -n3 -p "press enter to continue..."
 		clear
 	fi
-	echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [3/4]"
+	echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [4/5]"
 	printf '\n\n'
 	echo "Enable quickrun so that when weatherapp starts, it will immediately display the current forecast?" 
 	printf '\n\n'
@@ -139,7 +149,7 @@ echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 ste
 		read -n3 -p "press enter to continue..."
 		clear
 	fi
-	echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [4/4]"
+	echo -e "		${BLUE}             weatherapp Initial Setup${NC}                 step [5/5]"
 	printf '\n\n'
 	userDegrees="Farenheit"
 	echo "The default unit of measurement for temperature is set to $userDegrees, do you want to save these changes?"
